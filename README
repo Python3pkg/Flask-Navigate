@@ -1,0 +1,11 @@
+Flask-Navigate
+==============
+
+Another flask extension that provides dynamic navigation menus.
+
+Assumes use of Flask-Security and Bootstrap.
+
+Authors
+=======
+Bill Schumacher <https://www.github.com/bschumacher>
+

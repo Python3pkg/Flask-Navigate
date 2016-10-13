@@ -1,0 +1,4 @@
+Flask
+Flask-Security
+Flask-SQLAlchemy
+Flask-BS==0.5.0
