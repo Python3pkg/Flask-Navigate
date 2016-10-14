@@ -45,7 +45,16 @@ _default_config = {
     'SUBDOMAIN': None,
     'URL_PREFIX': None,
     'BLUEPRINT_NAME': 'nav',
-    'RENDER_URL': '/'
+    'RENDER_URL': '/',
+    'ADMIN_USES_APP_ROUTES': False,
+    'ADMIN_LIST_NAV_URL': 'admin/nav/list',
+    'ADMIN_ADD_NAV_URL': 'admin/nav/add',
+    'ADMIN_EDIT_NAV_URL': 'admin/nav/edit',
+    'ADMIN_DELETE_NAV_URL': 'admin/nav/delete',
+    'ADMIN_LIST_NAV_ITEM_URL': 'admin/nav/item/list',
+    'ADMIN_ADD_NAV_ITEM_URL': 'admin/nav/item/add',
+    'ADMIN_EDIT_NAV_ITEM_URL': 'admin/nav/item/edit',
+    'ADMIN_DELETE_NAV_ITEM_URL': 'admin/nav/item/delete',
 }
 
 
@@ -81,6 +90,16 @@ class _NavigateState(object):
         self.blueprint_name = ""
         self.url_prefix = ""
         self.subdomain = ""
+        self.render_url = ""
+        self.admin_uses_app_routes = False
+        self.admin_list_nav_url = 'admin/nav/list'
+        self.admin_add_nav_url = 'admin/nav/add'
+        self.admin_edit_nav_url = 'admin/nav/edit'
+        self.admin_delete_nav_url = 'admin/nav/delete'
+        self.admin_list_nav_item_url = 'admin/nav/item/list'
+        self.admin_add_nav_item_url = 'admin/nav/item/add'
+        self.admin_edit_nav_item_url = 'admin/nav/item/edit'
+        self.admin_delete_nav_item_url = 'admin/nav/item/delete'
         for key, value in kwargs.items():
             setattr(self, key.lower(), value)
 
@@ -220,12 +239,12 @@ class NavDatastore(object):
     def create_nav(self, **kwargs):
         kwargs = self._create_nav_defaults(**kwargs)
         nav = self.nav_model(**kwargs)
-        return self.add(nav)
+        return self.__getattribute__('add')(nav)
 
     def create_nav_item(self, **kwargs):
         kwargs = self._create_nav_item_defaults(**kwargs)
         nav_item = self.nav_item_model(**kwargs)
-        return self.add(nav_item)
+        return self.__getattribute__('add')(nav_item)
 
 
 class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
@@ -256,19 +275,19 @@ class NavMixin(object):
 
     @property
     def is_vertical(self):
-        return self.verticial
+        return self.__getattribute__('vertical')
 
     @property
     def is_active(self):
-        return self.active
+        return self.__getattribute__('active')
 
     @property
     def click_action(self):
-        return self.action
+        return self.__getattribute__('action')
 
     def get_id(self):
         try:
-            return text_type(self.id)
+            return text_type(self.__getattribute__('id'))
         except AttributeError:
             raise NotImplementedError('No `id` attribute - override `get_id`')
 
@@ -298,7 +317,63 @@ def create_blueprint(state, import_name):
                    subdomain=state.subdomain,
                    template_folder='templates')
 
+    if state.admin_uses_app_routes:
+        admin_routing = current_app
+    else:
+        admin_routing = bp
+
+    admin_routing.route(state.admin_list_nav_url,
+                        methods=['GET'],
+                        endpoint='admin_list_nav')(admin_list_nav)
+    admin_routing.route(state.admin_add_nav_url,
+                        methods=['GET', 'POST'],
+                        endpoint='admin_add_nav')(admin_add_nav)
+    admin_routing.route(state.admin_edit_nav_url + slash_url_suffix(state.admin_edit_nav_url, '<nav_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint='admin_edit_nav')(admin_edit_nav)
+    admin_routing.route(state.admin_delete_nav_url + slash_url_suffix(state.admin_delete_nav_url, '<nav_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint='admin_delete_nav')(admin_delete_nav)
+    admin_routing.route(state.admin_add_nav_item_url + slash_url_suffix(state.admin_add_nav_item_url, '<nav_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint='admin_add_nav_item')(admin_add_nav_item)
+    admin_routing.route(state.admin_edit_nav_item_url + slash_url_suffix(state.admin_edit_nav_item_url,
+                                                                         '<nav_item_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint='admin_edit_nav_item')(admin_edit_nav_item)
+    admin_routing.route(state.admin_delete_nav_item_url + slash_url_suffix(state.admin_delete_nav_item_url,
+                                                                           '<nav_item_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint='admin_delete_nav_item')(admin_delete_nav_item)
     return bp
+
+
+def admin_list_nav():
+    pass
+
+
+def admin_add_nav():
+    pass
+
+
+def admin_edit_nav():
+    pass
+
+
+def admin_delete_nav():
+    pass
+
+
+def admin_add_nav_item():
+    pass
+
+
+def admin_edit_nav_item():
+    pass
+
+
+def admin_delete_nav_item():
+    pass
 
 
 def render_nav(nav=1):
@@ -363,6 +438,93 @@ class NavItem(Base):
         if self.css_classes != "":
             classes.append(self.css_classes)
         return ' '.join(classes)
+
+nav_admin_list_template = Template("""
+<div>
+    <div>
+    {% for nav in navs %}
+        <div><a href="#">{{ nav.name }}</a> -=- <a href="#">Delete</a></div>
+    {% else %}
+        <div>No menus created yet.</div>
+    {% endfor %}
+    </div>
+</div>
+""")
+
+nav_admin_add_nav_template = Template("""
+<div>
+    <div>
+        <form method="post">
+
+            <div>
+                <div>
+                    Name
+                </div>
+                <div>
+                    <input type="text" name="name" value="{{ form.name.value }}"/>
+                </div>
+                {% if form.name.errors|count > 0 %}
+                    <div>
+                    {% for error in form.name.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div>
+                <div>
+                    Name
+                </div>
+                <div>
+                    <input type="text" name="name" value="{{ form.name.value }}"/>
+                </div>
+                {% if form.name.errors|count > 0 %}
+                    <div>
+                    {% for error in form.name.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <input type="checkbox" name="active" {% if form.active.value %}checked="CHECKED"{% endif %}/>
+            <input type="checkbox" name="hidden" {% if form.hidden.value %}checked="CHECKED"{% endif %}/>
+            <input type="checkbox" name="vertical" {% if form.vertical.value %}checked="CHECKED"{% endif %}/>
+            <input type="text" name="custom_tag_id" value="{{ form.custom_tag_id.value }}"/>
+            <input type="text" name="custom_tag_attributes" value="{{ form.custom_tag_attributes.value }}"/>
+            <input type="text" name="css_classes" value="{{ form.css_classes.value }}"/>
+            <input type="text" name="image_url" value="{{ form.image_url.value }}"/>
+            <input type="checkbox" name="repeat_image" {% if form.repeat_image.value %}checked="CHECKED"{% endif %}/>
+
+        </form>
+    </div>
+</div>
+""")
+
+nav_admin_delete_template = Template("""
+<div>
+    <div>
+    {% if nav_in_use %}
+        Cannot delete navigation menu while it is in use!<br>
+    {% else %}
+        Are you sure you want to delete: {{ nav.name }} ?<br>
+        <br>
+        *** WARNING ***<br>
+        It will be permanently deleted!<br>
+        <form method="post">
+            <div>
+                <div>
+                    <a href="#">
+                </div>
+                <div>
+                    <input type="submit" value="Delete">
+                </div>
+            </div>
+        </form>
+    {% endif %}
+    </div>
+</div>
+""")
 
 
 nav_template = Template("""
@@ -440,7 +602,10 @@ nav_template = Template("""
 
 {% macro render_nav_item(item, page, user, cycle) -%}
         <li class="{{ item.get_classes() }}">
-            <a {% if item.drop_down -%}href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"{% else -%}href="{% if item.target_url != "" and item.target_url != None -%}{{ item.target_url }}{% elif item.endpoint != "" and item.endpoint != None -%}{{ url_for(item.endpoint) }}{% endif -%}"{% endif -%}>
+            <a {% if item.drop_down -%}href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                aria-expanded="false"
+                {% else -%}
+                href="{% if item.target_url != "" and item.target_url != None -%}{{ item.target_url }}{% elif item.endpoint != "" and item.endpoint != None -%}{{ url_for(item.endpoint) }}{% endif -%}"{% endif -%}>
                 {{ item.text }}{% if item.drop_down -%}<span class="caret"></span>{% endif -%}</a>
             {% if item.drop_down -%}
                 <ul class="dropdown-menu" role="menu">
@@ -452,3 +617,11 @@ nav_template = Template("""
 {% endmacro -%}
 
 {{ render_nav(nav, request_path, user) }}""")
+
+
+def slash_url_suffix(url, suffix):
+    """Adds a slash either to the beginning or the end of a suffix
+    (which is to be appended to a URL), depending on whether or not
+    the URL ends with a slash."""
+
+    return url.endswith('/') and ('%s/' % suffix) or ('/%s' % suffix)

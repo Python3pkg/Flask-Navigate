@@ -15,7 +15,7 @@
 """
 from setuptools import setup, find_packages
 
-requirements = ['Flask', 'Flask-BS', 'Flask-Security', 'Flask-SQLAlchemy']
+requirements = ['Flask', 'Flask-BS', 'Flask-Security', 'Flask-SQLAlchemy', 'WTForms-Alchemy']
 
 
 setup(
