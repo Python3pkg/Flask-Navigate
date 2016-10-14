@@ -43,7 +43,7 @@ _default_config = {
     'DATABASE_URI': 'sqlite:///nav.db',
     'DATABASE_TABLE_PREFIX': 'fnav',
     'SUBDOMAIN': None,
-    'URL_PREFIX': None,
+    'URL_PREFIX': '/nav',
     'BLUEPRINT_NAME': 'nav',
     'RENDER_URL': '/',
     'ADMIN_USES_APP_ROUTES': False,
@@ -92,7 +92,7 @@ class _NavigateState(object):
         self.subdomain = ""
         self.render_url = ""
         self.admin_uses_app_routes = False
-        self.admin_list_nav_url = '/admin/nav/list'
+        self.admin_list_nav_url = '/admin/'
         self.admin_add_nav_url = '/admin/nav/add'
         self.admin_edit_nav_url = '/admin/nav/edit'
         self.admin_delete_nav_url = '/admin/nav/delete'
