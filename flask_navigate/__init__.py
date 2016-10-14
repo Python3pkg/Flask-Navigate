@@ -92,14 +92,14 @@ class _NavigateState(object):
         self.subdomain = ""
         self.render_url = ""
         self.admin_uses_app_routes = False
-        self.admin_list_nav_url = 'admin/nav/list'
-        self.admin_add_nav_url = 'admin/nav/add'
-        self.admin_edit_nav_url = 'admin/nav/edit'
-        self.admin_delete_nav_url = 'admin/nav/delete'
-        self.admin_list_nav_item_url = 'admin/nav/item/list'
-        self.admin_add_nav_item_url = 'admin/nav/item/add'
-        self.admin_edit_nav_item_url = 'admin/nav/item/edit'
-        self.admin_delete_nav_item_url = 'admin/nav/item/delete'
+        self.admin_list_nav_url = '/admin/nav/list'
+        self.admin_add_nav_url = '/admin/nav/add'
+        self.admin_edit_nav_url = '/admin/nav/edit'
+        self.admin_delete_nav_url = '/admin/nav/delete'
+        self.admin_list_nav_item_url = '/admin/nav/item/list'
+        self.admin_add_nav_item_url = '/admin/nav/item/add'
+        self.admin_edit_nav_item_url = '/admin/nav/item/edit'
+        self.admin_delete_nav_item_url = '/admin/nav/item/delete'
         for key, value in kwargs.items():
             setattr(self, key.lower(), value)
 
@@ -355,8 +355,8 @@ def create_blueprint(state, import_name):
 
 
 def admin_list_nav():
-    navigation_menus = _datastore
-    return nav_admin_list_template.render()
+    navigation_menus = _datastore.get_all_nav()
+    return nav_admin_list_template.render(navs=navigation_menus)
 
 
 def admin_add_nav():
