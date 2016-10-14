@@ -442,6 +442,7 @@ class NavItem(Base):
 nav_admin_list_template = Template("""
 <div>
     <div>
+        <h4>Navigation Menus</h4>
     {% for nav in navs %}
         <div><a href="#">{{ nav.name }}</a> -=- <a href="#">Delete</a></div>
     {% else %}
@@ -454,49 +455,8 @@ nav_admin_list_template = Template("""
 nav_admin_add_nav_template = Template("""
 <div>
     <div>
-        <form method="post">
-
-            <div>
-                <div>
-                    Name
-                </div>
-                <div>
-                    <input type="text" name="name" value="{{ form.name.value }}"/>
-                </div>
-                {% if form.name.errors|count > 0 %}
-                    <div>
-                    {% for error in form.name.errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            <div>
-                <div>
-                    Name
-                </div>
-                <div>
-                    <input type="text" name="name" value="{{ form.name.value }}"/>
-                </div>
-                {% if form.name.errors|count > 0 %}
-                    <div>
-                    {% for error in form.name.errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <input type="checkbox" name="active" {% if form.active.value %}checked="CHECKED"{% endif %}/>
-            <input type="checkbox" name="hidden" {% if form.hidden.value %}checked="CHECKED"{% endif %}/>
-            <input type="checkbox" name="vertical" {% if form.vertical.value %}checked="CHECKED"{% endif %}/>
-            <input type="text" name="custom_tag_id" value="{{ form.custom_tag_id.value }}"/>
-            <input type="text" name="custom_tag_attributes" value="{{ form.custom_tag_attributes.value }}"/>
-            <input type="text" name="css_classes" value="{{ form.css_classes.value }}"/>
-            <input type="text" name="image_url" value="{{ form.image_url.value }}"/>
-            <input type="checkbox" name="repeat_image" {% if form.repeat_image.value %}checked="CHECKED"{% endif %}/>
-
-        </form>
+        <h4>Add Navigation Menu</h4>
+        {{ form }}
     </div>
 </div>
 """)
@@ -504,6 +464,7 @@ nav_admin_add_nav_template = Template("""
 nav_admin_delete_template = Template("""
 <div>
     <div>
+        <h4>Delete Navigation Menu</h4>
     {% if nav_in_use %}
         Cannot delete navigation menu while it is in use!<br>
     {% else %}
