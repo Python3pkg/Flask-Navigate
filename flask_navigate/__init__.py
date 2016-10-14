@@ -236,6 +236,9 @@ class NavDatastore(object):
     def get_nav(self, id_or_name):
         raise NotImplementedError
 
+    def get_all_nav(self):
+        raise NotImplementedError
+
     def create_nav(self, **kwargs):
         kwargs = self._create_nav_defaults(**kwargs)
         nav = self.nav_model(**kwargs)
@@ -261,6 +264,9 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
         elif type(identifier) == str:
             return self.db.query(self.nav_model).filter(self.nav_model.name == identifier).first()
         return None
+
+    def get_all_nav(self):
+        return self.db.query(self.nav_model).all()
 
 
 class NavMixin(object):
@@ -349,7 +355,8 @@ def create_blueprint(state, import_name):
 
 
 def admin_list_nav():
-    pass
+    navigation_menus = _datastore
+    return nav_admin_list_template.render()
 
 
 def admin_add_nav():
