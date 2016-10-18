@@ -21,14 +21,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import current_user
 from werkzeug.local import LocalProxy
 from jinja2 import Template
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, create_engine, MetaData
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from ._compat import PY2, text_type
 from sqlalchemy.engine.reflection import Inspector
-from wtforms_alchemy import ModelForm
-from flask_wtf_flexwidgets import render_form_template, FlexStringWidget, FlexBoolWidget
-from flask_bs import Bootstrap, render_content_with_bootstrap
+from flask_bs import Bootstrap
+from flask_navigate.views import admin_add_nav, admin_add_nav_item, admin_delete_nav, admin_delete_nav_item, \
+    admin_edit_nav, admin_edit_nav_item, admin_list_nav
+from flask_navigate.models import Nav, NavItem, Base
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
 # before that we need to use the _request_ctx_stack.
@@ -50,6 +50,8 @@ _default_config = {
     'BLUEPRINT_NAME': 'nav',
     'RENDER_URL': '/',
     'ADMIN_USES_APP_ROUTES': False,
+    # FEXADMIN == Flask-EXtensionAdmin (Coming Soon)
+    'ADMIN_USES_FEXADMIN': False,
     'ADMIN_LIST_NAV_URL': '/admin',
     'ADMIN_ADD_NAV_URL': '/admin/nav/add',
     'ADMIN_EDIT_NAV_URL': '/admin/nav/edit',
@@ -154,9 +156,10 @@ class Navigate(object):
 
         state.render_template = self.render_template
         app.extensions['navigate'] = state
-
-        if not app.extensions.get('bootstrap', False):
+        b = app.extensions.get('bootstrap', False)
+        if not b:
             b = Bootstrap(app=app)
+
         return state
 
     def render_template(self, *args, **kwargs):
@@ -274,50 +277,7 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
         return self.db.query(self.nav_model).all()
 
 
-class NavMixin(object):
-    """
-    This provides default implementations for the methods that Flask-Nav expect Nav objects to have.
-    """
 
-    if not PY2:  # pragma: no cover
-        # Python 3 implicitly set __hash__ to None if we override __eq__
-        # We set it back to its default implementation
-        __hash__ = object.__hash__
-
-    @property
-    def is_vertical(self):
-        return self.__getattribute__('vertical')
-
-    @property
-    def is_active(self):
-        return self.__getattribute__('active')
-
-    @property
-    def click_action(self):
-        return self.__getattribute__('action')
-
-    def get_id(self):
-        try:
-            return text_type(self.__getattribute__('id'))
-        except AttributeError:
-            raise NotImplementedError('No `id` attribute - override `get_id`')
-
-    def __eq__(self, other):
-        """
-        Checks the equality of two `NavMixin` objects using `get_id`.
-        """
-        if isinstance(other, NavMixin):
-            return self.get_id() == other.get_id()
-        return NotImplemented
-
-    def __ne__(self, other):
-        """
-        Checks the inequality of two `NavMixin` objects using `get_id`.
-        """
-        equal = self.__eq__(other)
-        if equal is NotImplemented:
-            return NotImplemented
-        return not equal
 
 
 def create_blueprint(state, import_name):
@@ -359,233 +319,11 @@ def create_blueprint(state, import_name):
     return bp
 
 
-def admin_list_nav():
-    navigation_menus = _datastore.get_all_nav()
-    return nav_admin_list_template.render(navs=navigation_menus, add_nav_endpoint=_navigate.blueprint_name +
-                                          '.admin_add_nav', url_for=url_for)
-
-
-def admin_add_nav():
-    form = NavForm()
-    if request.method == 'GET':
-        form.populate_obj(Nav())
-        rendered_form = render_form_template(form)
-
-        return nav_admin_add_nav_template.render(form=rendered_form)
-    else:
-        if form.validate_on_submit():
-            return redirect(url_for('admin_list_nav'))
-        else:
-            return nav_admin_add_nav_template.render(form=render_form_template(form))
-
-
-def admin_edit_nav():
-    pass
-
-
-def admin_delete_nav():
-    pass
-
-
-def admin_add_nav_item():
-    pass
-
-
-def admin_edit_nav_item():
-    pass
-
-
-def admin_delete_nav_item():
-    pass
-
-
 def render_nav(nav=1):
     nav_obj = _datastore.get_nav(nav)
     if nav_obj:
         return nav_template.render(nav=nav_obj, request_path=request.path, user=current_user, url_for=url_for)
     return """Nav Menu Not Found"""
-
-nav_metadata = MetaData()
-Base = declarative_base(metadata=nav_metadata)
-
-
-class Nav(Base):
-    __tablename__ = 'fnav_nav'
-    id = Column(Integer(), primary_key=True)
-    name = Column(String(256), info={
-                            'label': "Name",
-                            'widget': FlexStringWidget(),
-                        }
-                 )
-    active = Column(Boolean(), info={
-                            'label': "Active",
-                            'widget': FlexBoolWidget(),
-                        })
-    hidden = Column(Boolean(), info={
-                            'label': "Hidden",
-                            'widget': FlexBoolWidget(),
-                        })
-    vertical = Column(Boolean(), info={
-                            'label': "Vertical",
-                            'widget': FlexBoolWidget(),
-                        })
-    custom_tag_id = Column(String(256), info={
-                            'label': "Custom HTML Tag ID",
-                            'widget': FlexStringWidget(),
-                        })
-    custom_tag_attributes = Column(Text(), info={
-                            'label': "Custom HTML Tag Attributes",
-                            'widget': FlexStringWidget(),
-                        })
-    css_classes = Column(String(256), info={
-                            'label': "CSS Classes",
-                            'widget': FlexStringWidget(),
-                        })
-    image_url = Column(String(256), info={
-                            'label': "Image URL",
-                            'widget': FlexStringWidget(),
-                        })
-    repeat_image = Column(Boolean(), info={
-                            'label': "Repeat Image",
-                            'widget': FlexBoolWidget(),
-                        })
-
-    def top_level_items(self):
-        return _datastore.db.query(NavItem).filter(NavItem.nav_id == self.id).filter(NavItem.parent_id == None).all()
-
-
-class NavForm(ModelForm):
-    class Meta:
-        model = Nav
-
-
-class NavItem(Base):
-    __tablename__ = 'fnav_nav_item'
-    id = Column(Integer(), primary_key=True)
-    image_url = Column(String(256), info={
-                            'label': "Image URL",
-                            'widget': FlexStringWidget,
-                        }
-                       )
-    new_banner = Column(Boolean(), info={
-                            'label': "Display New Banner",
-                            'widget': FlexBoolWidget(),
-                        })
-    drop_down = Column(Boolean(), info={
-                            'label': "Is Drop Down",
-                            'widget': FlexBoolWidget(),
-                        })
-    active = Column(Boolean(), info={
-                            'label': "Active",
-                            'widget': FlexBoolWidget(),
-                        })
-    # Will stretch if False
-    repeat_image = Column(Boolean(), info={
-                            'label': "Repeat Image",
-                            'widget': FlexBoolWidget(),
-                        })
-    parent_id = Column(Integer(), ForeignKey('fnav_nav_item.id'), default=None)
-    parent = relationship('NavItem', foreign_keys='NavItem.parent_id', uselist=False)
-    text = Column(String(256), info={
-                            'label': "Text",
-                            'widget': FlexStringWidget(),
-                        })
-    target_url = Column(String(256), info={
-                            'label': "URL Target",
-                            'widget': FlexStringWidget(),
-                        })
-    javascript_onclick = Column(Text(), info={
-                            'label': "Javascript ONCLICK=",
-                            'widget': FlexStringWidget(),
-                        })
-    custom_tag_attributes = Column(Text(), info={
-                            'label': "Custom HTML Tag Attributes",
-                            'widget': FlexStringWidget(),
-                        })
-    css_classes = Column(String(256), info={
-                            'label': "CSS Classes",
-                            'widget': FlexStringWidget(),
-                        })
-    custom_tag_id = Column(String(256), info={
-                            'label': "Custom HTML Tag ID",
-                            'widget': FlexStringWidget(),
-                        })
-    nav_id = Column(Integer(), ForeignKey('fnav_nav.id'))
-    nav = relationship('Nav', backref='items')
-    endpoint = Column(String(256), info={
-                            'label': "url_for Endpoint",
-                            'widget': FlexStringWidget(),
-                        })
-
-    def children(self):
-        return _datastore.db.query(NavItem).filter(NavItem.parent_id == self.id).all()
-
-    def get_classes(self):
-        classes = []
-        if self.drop_down:
-            classes.append('dropdown')
-        if self.new_banner:
-            classes.append('new_banner')
-        if self.active:
-            classes.append('active')
-        if self.css_classes != "":
-            classes.append(self.css_classes)
-        return ' '.join(classes)
-
-
-class NavItemForm(ModelForm):
-    class Meta:
-        model = NavItem
-
-
-nav_admin_list_template = Template("""
-<div>
-    <div>
-        <h4>Navigation Menus</h4>
-    {%- for nav in navs -%}
-        <div><a href="#">{{ nav.name }}</a> -=- <a href="#">Delete</a></div>
-    {% else %}
-        <div>No menus created yet.</div>
-    {%- endfor -%}
-        <a href="{{ url_for(add_nav_endpoint) }}">Create Navigation Menu</a>
-    </div>
-</div>
-""")
-
-nav_admin_add_nav_template = Template("""
-<div>
-    <div>
-        <h4>Add Navigation Menu</h4>
-        {{ form }}
-    </div>
-</div>
-""")
-
-nav_admin_delete_template = Template("""
-<div>
-    <div>
-        <h4>Delete Navigation Menu</h4>
-    {% if nav_in_use %}
-        Cannot delete navigation menu while it is in use!<br>
-    {% else %}
-        Are you sure you want to delete: {{ nav.name }} ?<br>
-        <br>
-        *** WARNING ***<br>
-        It will be permanently deleted!<br>
-        <form method="post">
-            <div>
-                <div>
-                    <a href="#">
-                </div>
-                <div>
-                    <input type="submit" value="Delete">
-                </div>
-            </div>
-        </form>
-    {% endif %}
-    </div>
-</div>
-""")
 
 
 nav_template = Template("""
