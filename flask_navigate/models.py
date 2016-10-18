@@ -1,5 +1,6 @@
 
 from wtforms_alchemy import ModelForm
+from wtforms import SubmitField
 from flask import current_app
 from flask_wtf_flexwidgets import FlexStringWidget, FlexBoolWidget
 
@@ -113,6 +114,8 @@ class Nav(Base):
 class NavForm(ModelForm):
     class Meta:
         model = Nav
+        
+    submit = SubmitField('Save')
 
 
 class NavItem(Base):
@@ -192,3 +195,5 @@ class NavItem(Base):
 class NavItemForm(ModelForm):
     class Meta:
         model = NavItem
+
+    submit = SubmitField('Save')
