@@ -16,7 +16,7 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
-from flask import current_app, Blueprint, render_template, request, url_for
+from flask import current_app, Blueprint, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import current_user
 from werkzeug.local import LocalProxy
@@ -26,6 +26,8 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from ._compat import PY2, text_type
 from sqlalchemy.engine.reflection import Inspector
+from wtforms_alchemy import ModelForm
+from flask_wtf_flexwidgets import form_template
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
 # before that we need to use the _request_ctx_stack.
@@ -47,14 +49,14 @@ _default_config = {
     'BLUEPRINT_NAME': 'nav',
     'RENDER_URL': '/',
     'ADMIN_USES_APP_ROUTES': False,
-    'ADMIN_LIST_NAV_URL': 'admin/nav/list',
-    'ADMIN_ADD_NAV_URL': 'admin/nav/add',
-    'ADMIN_EDIT_NAV_URL': 'admin/nav/edit',
-    'ADMIN_DELETE_NAV_URL': 'admin/nav/delete',
-    'ADMIN_LIST_NAV_ITEM_URL': 'admin/nav/item/list',
-    'ADMIN_ADD_NAV_ITEM_URL': 'admin/nav/item/add',
-    'ADMIN_EDIT_NAV_ITEM_URL': 'admin/nav/item/edit',
-    'ADMIN_DELETE_NAV_ITEM_URL': 'admin/nav/item/delete',
+    'ADMIN_LIST_NAV_URL': '/admin',
+    'ADMIN_ADD_NAV_URL': '/admin/nav/add',
+    'ADMIN_EDIT_NAV_URL': '/admin/nav/edit',
+    'ADMIN_DELETE_NAV_URL': '/admin/nav/delete',
+    'ADMIN_LIST_NAV_ITEM_URL': '/admin/nav/item/list',
+    'ADMIN_ADD_NAV_ITEM_URL': '/admin/nav/item/add',
+    'ADMIN_EDIT_NAV_ITEM_URL': '/admin/nav/item/edit',
+    'ADMIN_DELETE_NAV_ITEM_URL': '/admin/nav/item/delete',
 }
 
 
@@ -360,7 +362,14 @@ def admin_list_nav():
 
 
 def admin_add_nav():
-    pass
+    form = NavForm()
+    if request.method == 'GET':
+        return nav_admin_add_nav_template.render(form=form_template.render(form))
+    else:
+        if form.validate_on_submit():
+            return redirect(url_for('admin_list_nav'))
+        else:
+            return nav_admin_add_nav_template.render(form=form_template.render(form))
 
 
 def admin_edit_nav():
@@ -410,6 +419,11 @@ class Nav(Base):
         return _datastore.db.query(NavItem).filter(NavItem.nav_id == self.id).filter(NavItem.parent_id == None).all()
 
 
+class NavForm(ModelForm):
+    class Meta:
+        model = Nav
+
+
 class NavItem(Base):
     __tablename__ = 'fnav_nav_item'
     id = Column(Integer(), primary_key=True)
@@ -446,15 +460,21 @@ class NavItem(Base):
             classes.append(self.css_classes)
         return ' '.join(classes)
 
+
+class NavItemForm(ModelForm):
+    class Meta:
+        model = NavItem
+
+
 nav_admin_list_template = Template("""
 <div>
     <div>
         <h4>Navigation Menus</h4>
-    {% for nav in navs %}
+    {%- for nav in navs -%}
         <div><a href="#">{{ nav.name }}</a> -=- <a href="#">Delete</a></div>
     {% else %}
         <div>No menus created yet.</div>
-    {% endfor %}
+    {%- endfor -%}
     </div>
 </div>
 """)
