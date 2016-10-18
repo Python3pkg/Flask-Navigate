@@ -14,10 +14,9 @@
 """
 from flask import Flask
 from flask_navigate import Navigate, render_nav
-from flask_bs import Bootstrap, render_content_with_bootstrap
+from flask_bs import render_content_with_bootstrap
 
 app = Flask(__name__)
-bs = Bootstrap(app)
 nav = Navigate(app).init_app(app)
 
 
@@ -41,4 +40,4 @@ if __name__ == "__main__":
                                                      javascript_onclick=None, css_classes="",
                                                      custom_tag_id=None, custom_tag_attributes=None, nav_id=new_nav.id,
                                                      endpoint="hello")
-    app.run(port=5501)
+    app.run(port=5501, debug=False)

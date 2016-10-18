@@ -28,6 +28,7 @@ from ._compat import PY2, text_type
 from sqlalchemy.engine.reflection import Inspector
 from wtforms_alchemy import ModelForm
 from flask_wtf_flexwidgets import render_form_template, FlexStringWidget, FlexBoolWidget
+from flask_bs import Bootstrap, render_content_with_bootstrap
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
 # before that we need to use the _request_ctx_stack.
@@ -154,6 +155,8 @@ class Navigate(object):
         state.render_template = self.render_template
         app.extensions['navigate'] = state
 
+        if not app.extensions.get('bootstrap', False):
+            b = Bootstrap(app=app)
         return state
 
     def render_template(self, *args, **kwargs):
