@@ -27,7 +27,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from ._compat import PY2, text_type
 from sqlalchemy.engine.reflection import Inspector
 from wtforms_alchemy import ModelForm
-from flask_wtf_flexwidgets import form_template
+from flask_wtf_flexwidgets import render_form_template, FlexStringWidget, FlexBoolWidget
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
 # before that we need to use the _request_ctx_stack.
@@ -358,18 +358,22 @@ def create_blueprint(state, import_name):
 
 def admin_list_nav():
     navigation_menus = _datastore.get_all_nav()
-    return nav_admin_list_template.render(navs=navigation_menus)
+    return nav_admin_list_template.render(navs=navigation_menus, add_nav_endpoint=_navigate.blueprint_name +
+                                          '.admin_add_nav', url_for=url_for)
 
 
 def admin_add_nav():
     form = NavForm()
     if request.method == 'GET':
-        return nav_admin_add_nav_template.render(form=form_template.render(form))
+        form.populate_obj(Nav())
+        rendered_form = render_form_template(form)
+
+        return nav_admin_add_nav_template.render(form=rendered_form)
     else:
         if form.validate_on_submit():
             return redirect(url_for('admin_list_nav'))
         else:
-            return nav_admin_add_nav_template.render(form=form_template.render(form))
+            return nav_admin_add_nav_template.render(form=render_form_template(form))
 
 
 def admin_edit_nav():
@@ -405,15 +409,43 @@ Base = declarative_base(metadata=nav_metadata)
 class Nav(Base):
     __tablename__ = 'fnav_nav'
     id = Column(Integer(), primary_key=True)
-    name = Column(String(256))
-    active = Column(Boolean())
-    hidden = Column(Boolean())
-    vertical = Column(Boolean())
-    custom_tag_attributes = Column(Text())
-    css_classes = Column(String(256))
-    custom_tag_id = Column(String(256))
-    image_url = Column(String(256))
-    repeat_image = Column(Boolean())
+    name = Column(String(256), info={
+                            'label': "Name",
+                            'widget': FlexStringWidget(),
+                        }
+                 )
+    active = Column(Boolean(), info={
+                            'label': "Active",
+                            'widget': FlexBoolWidget(),
+                        })
+    hidden = Column(Boolean(), info={
+                            'label': "Hidden",
+                            'widget': FlexBoolWidget(),
+                        })
+    vertical = Column(Boolean(), info={
+                            'label': "Vertical",
+                            'widget': FlexBoolWidget(),
+                        })
+    custom_tag_id = Column(String(256), info={
+                            'label': "Custom HTML Tag ID",
+                            'widget': FlexStringWidget(),
+                        })
+    custom_tag_attributes = Column(Text(), info={
+                            'label': "Custom HTML Tag Attributes",
+                            'widget': FlexStringWidget(),
+                        })
+    css_classes = Column(String(256), info={
+                            'label': "CSS Classes",
+                            'widget': FlexStringWidget(),
+                        })
+    image_url = Column(String(256), info={
+                            'label': "Image URL",
+                            'widget': FlexStringWidget(),
+                        })
+    repeat_image = Column(Boolean(), info={
+                            'label': "Repeat Image",
+                            'widget': FlexBoolWidget(),
+                        })
 
     def top_level_items(self):
         return _datastore.db.query(NavItem).filter(NavItem.nav_id == self.id).filter(NavItem.parent_id == None).all()
@@ -427,23 +459,60 @@ class NavForm(ModelForm):
 class NavItem(Base):
     __tablename__ = 'fnav_nav_item'
     id = Column(Integer(), primary_key=True)
-    image_url = Column(String(256))
-    new_banner = Column(Boolean())
-    drop_down = Column(Boolean())
-    active = Column(Boolean())
+    image_url = Column(String(256), info={
+                            'label': "Image URL",
+                            'widget': FlexStringWidget,
+                        }
+                       )
+    new_banner = Column(Boolean(), info={
+                            'label': "Display New Banner",
+                            'widget': FlexBoolWidget(),
+                        })
+    drop_down = Column(Boolean(), info={
+                            'label': "Is Drop Down",
+                            'widget': FlexBoolWidget(),
+                        })
+    active = Column(Boolean(), info={
+                            'label': "Active",
+                            'widget': FlexBoolWidget(),
+                        })
     # Will stretch if False
-    repeat_image = Column(Boolean())
+    repeat_image = Column(Boolean(), info={
+                            'label': "Repeat Image",
+                            'widget': FlexBoolWidget(),
+                        })
     parent_id = Column(Integer(), ForeignKey('fnav_nav_item.id'), default=None)
     parent = relationship('NavItem', foreign_keys='NavItem.parent_id', uselist=False)
-    text = Column(String(256))
-    target_url = Column(String(256))
-    javascript_onclick = Column(Text())
-    custom_tag_attributes = Column(Text())
-    css_classes = Column(String(256))
-    custom_tag_id = Column(String(256))
+    text = Column(String(256), info={
+                            'label': "Text",
+                            'widget': FlexStringWidget(),
+                        })
+    target_url = Column(String(256), info={
+                            'label': "URL Target",
+                            'widget': FlexStringWidget(),
+                        })
+    javascript_onclick = Column(Text(), info={
+                            'label': "Javascript ONCLICK=",
+                            'widget': FlexStringWidget(),
+                        })
+    custom_tag_attributes = Column(Text(), info={
+                            'label': "Custom HTML Tag Attributes",
+                            'widget': FlexStringWidget(),
+                        })
+    css_classes = Column(String(256), info={
+                            'label': "CSS Classes",
+                            'widget': FlexStringWidget(),
+                        })
+    custom_tag_id = Column(String(256), info={
+                            'label': "Custom HTML Tag ID",
+                            'widget': FlexStringWidget(),
+                        })
     nav_id = Column(Integer(), ForeignKey('fnav_nav.id'))
     nav = relationship('Nav', backref='items')
-    endpoint = Column(String(256))
+    endpoint = Column(String(256), info={
+                            'label': "url_for Endpoint",
+                            'widget': FlexStringWidget(),
+                        })
 
     def children(self):
         return _datastore.db.query(NavItem).filter(NavItem.parent_id == self.id).all()
@@ -475,6 +544,7 @@ nav_admin_list_template = Template("""
     {% else %}
         <div>No menus created yet.</div>
     {%- endfor -%}
+        <a href="{{ url_for(add_nav_endpoint) }}">Create Navigation Menu</a>
     </div>
 </div>
 """)
