@@ -24,14 +24,17 @@ def admin_add_nav():
     form = NavForm()
     if request.method == 'GET':
         rendered_form = render_form_template(form)
-        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form))
+        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form),
+                                             head="<style>" + css_template + "</style>")
     else:
         form.process(formdata=request.form)
         if form.validate():
             nav = _datastore.create_nav(**form.data_without_submit)
             return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
         else:
-            return nav_admin_add_nav_template.render(form=render_form_template(form))
+            rendered_form = render_form_template(form)
+        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form),
+                                             head="<style>" + css_template + "</style>")
 
 
 def admin_edit_nav():

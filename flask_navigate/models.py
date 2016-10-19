@@ -77,7 +77,8 @@ class Nav(Base):
     name = Column(String(256), info={
                             'label': "Name",
                             'widget': FlexStringWidget(),
-                        }
+                        },
+                  nullable=False
                   )
     active = Column(Boolean(), info={
                             'label': "Active",
