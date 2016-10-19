@@ -284,10 +284,13 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
         NavDatastore.__init__(self, nav_model, nav_item_model)
 
     def get_nav(self, identifier):
-        if type(identifier) == int:
+        if type(identifier) == str:
+            if identifier.isdigit():
+                return self.db.query(self.nav_model).get(int(identifier))
+            else:
+                return self.db.query(self.nav_model).filter(self.nav_model.name == identifier).first()
+        elif type(identifier) == int:
             return self.db.query(self.nav_model).get(identifier)
-        elif type(identifier) == str:
-            return self.db.query(self.nav_model).filter(self.nav_model.name == identifier).first()
         return None
 
     def get_all_nav(self):
