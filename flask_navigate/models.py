@@ -2,10 +2,15 @@
 from wtforms_alchemy import ModelForm
 from wtforms import SubmitField
 from flask import current_app
-from flask_wtf_flexwidgets import FlexStringWidget, FlexBoolWidget
+from flask_wtf_flexwidgets import FlexStringWidget, FlexBoolWidget, FlexSubmitWidget
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from werkzeug.local import LocalProxy
-from ._compat import PY2, text_type
+from ._compat import PY2, text_type, itervalues, iteritems
 from sqlalchemy.ext.declarative import declarative_base
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, MetaData
@@ -111,11 +116,28 @@ class Nav(Base):
         return _datastore.db.query(NavItem).filter(NavItem.nav_id == self.id).filter(NavItem.parent_id == None).all()
 
 
-class NavForm(ModelForm):
+class OrderedModelForm(ModelForm):
+    def __iter__(self):
+        field_order = getattr(self, 'field_order', None)
+        if field_order:
+            temp_fields = OrderedDict()
+            for name in field_order:
+                if name == '*':
+                    for key, f in iteritems(self._fields):
+                        if key not in field_order:
+                            temp_fields[key] = f
+                else:
+                    temp_fields[name] = self._fields[name]
+            self._fields = temp_fields
+        return iter(itervalues(self._fields))
+
+
+class NavForm(OrderedModelForm):
     class Meta:
         model = Nav
-        
-    submit = SubmitField('Save')
+    field_order = ('name', 'active', 'hidden', 'vertical', 'custom_tag_id', 'custom_tag_attributes', 'css_classes',
+                   'image_url', 'repeat_image', '*')
+    submit = SubmitField('Save', widget=FlexSubmitWidget())
 
 
 class NavItem(Base):
@@ -192,7 +214,7 @@ class NavItem(Base):
         return ' '.join(classes)
 
 
-class NavItemForm(ModelForm):
+class NavItemForm(OrderedModelForm):
     class Meta:
         model = NavItem
 
