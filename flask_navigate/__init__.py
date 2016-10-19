@@ -60,6 +60,15 @@ _default_config = {
     'ADMIN_ADD_NAV_ITEM_URL': '/admin/nav/item/add',
     'ADMIN_EDIT_NAV_ITEM_URL': '/admin/nav/item/edit',
     'ADMIN_DELETE_NAV_ITEM_URL': '/admin/nav/item/delete',
+    'ADMIN_LIST_NAV_ENDPOINT': 'admin_list_nav',
+    'ADMIN_ADD_NAV_ENDPOINT': 'admin_add_nav',
+    'ADMIN_EDIT_NAV_ENDPOINT': 'admin_edit_nav',
+    'ADMIN_DELETE_NAV_ENDPOINT': 'admin_delete_nav',
+    'ADMIN_LIST_NAV_ITEM_ENDPOINT': 'admin_list_nav_item',
+    'ADMIN_ADD_NAV_ITEM_ENDPOINT': 'admin_add_nav_item',
+    'ADMIN_EDIT_NAV_ITEM_ENDPOINT': 'admin_edit_nav_item',
+    'ADMIN_DELETE_NAV_ITEM_ENDPOINT': 'admin_delete_nav_item',
+
 }
 
 
@@ -105,6 +114,14 @@ class _NavigateState(object):
         self.admin_add_nav_item_url = '/admin/nav/item/add'
         self.admin_edit_nav_item_url = '/admin/nav/item/edit'
         self.admin_delete_nav_item_url = '/admin/nav/item/delete'
+        self.admin_list_nav_endpoint = 'admin_list_nav'
+        self.admin_add_nav_endpoint = 'admin_add_nav'
+        self.admin_edit_nav_endpoint = 'admin_edit_nav'
+        self.admin_delete_nav_endpoint = 'admin_delete_nav'
+        self.admin_list_nav_item_endpoint = 'admin_list_nav_item'
+        self.admin_add_nav_item_endpoint = 'admin_add_nav_item'
+        self.admin_edit_nav_item_endpoint = 'admin_edit_nav_item'
+        self.admin_delete_nav_item_endpoint = 'admin_delete_nav_item'
         for key, value in kwargs.items():
             setattr(self, key.lower(), value)
 
@@ -292,27 +309,33 @@ def create_blueprint(state, import_name):
 
     admin_routing.route(state.admin_list_nav_url,
                         methods=['GET'],
-                        endpoint='admin_list_nav')(admin_list_nav)
+                        endpoint=state.admin_list_nav_endpoint)(admin_list_nav)
+
     admin_routing.route(state.admin_add_nav_url,
                         methods=['GET', 'POST'],
-                        endpoint='admin_add_nav')(admin_add_nav)
+                        endpoint=state.admin_add_nav_endpoint)(admin_add_nav)
+
     admin_routing.route(state.admin_edit_nav_url + slash_url_suffix(state.admin_edit_nav_url, '<nav_id>'),
                         methods=['GET', 'POST'],
-                        endpoint='admin_edit_nav')(admin_edit_nav)
+                        endpoint=state.admin_edit_nav_endpoint)(admin_edit_nav)
+
     admin_routing.route(state.admin_delete_nav_url + slash_url_suffix(state.admin_delete_nav_url, '<nav_id>'),
                         methods=['GET', 'POST'],
-                        endpoint='admin_delete_nav')(admin_delete_nav)
+                        endpoint=state.admin_delete_nav_endpoint)(admin_delete_nav)
+
     admin_routing.route(state.admin_add_nav_item_url + slash_url_suffix(state.admin_add_nav_item_url, '<nav_id>'),
                         methods=['GET', 'POST'],
-                        endpoint='admin_add_nav_item')(admin_add_nav_item)
+                        endpoint=state.admin_add_nav_item_endpoint)(admin_add_nav_item)
+
     admin_routing.route(state.admin_edit_nav_item_url + slash_url_suffix(state.admin_edit_nav_item_url,
                                                                          '<nav_item_id>'),
                         methods=['GET', 'POST'],
-                        endpoint='admin_edit_nav_item')(admin_edit_nav_item)
+                        endpoint=state.admin_edit_nav_item_endpoint)(admin_edit_nav_item)
+
     admin_routing.route(state.admin_delete_nav_item_url + slash_url_suffix(state.admin_delete_nav_item_url,
                                                                            '<nav_item_id>'),
                         methods=['GET', 'POST'],
-                        endpoint='admin_delete_nav_item')(admin_delete_nav_item)
+                        endpoint=state.admin_delete_nav_item_endpoint)(admin_delete_nav_item)
     return bp
 
 

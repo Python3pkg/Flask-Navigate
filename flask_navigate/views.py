@@ -31,14 +31,27 @@ def admin_add_nav():
         if form.validate():
             nav = _datastore.create_nav(**form.data_without_submit)
             return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
-        else:
-            rendered_form = render_form_template(form)
+        rendered_form = render_form_template(form)
         return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form),
                                              head="<style>" + css_template + "</style>")
 
 
-def admin_edit_nav():
-    pass
+def admin_edit_nav(nav_id=None):
+    nav_obj = _datastore.get_nav(nav_id)
+    if nav_obj:
+        form = NavForm()
+        form.process(obj=nav_obj)
+        if request.method == 'GET':
+            rendered_form = render_form_template(form)
+            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form),
+                                                 head="<style>" + css_template + "</style>")
+        else:
+            if form.validate():
+                print(dir(nav_obj))
+                return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
+            rendered_form = render_form_template(form)
+            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form),
+                                                 head="<style>" + css_template + "</style>")
 
 
 def admin_delete_nav():
@@ -81,6 +94,14 @@ nav_admin_add_nav_template = Template("""
 </div>
 """)
 
+nav_admin_edit_nav_template = Template("""
+<div>
+    <div>
+        <h4>Edit Navigation Menu</h4>
+        {{ form }}
+    </div>
+</div>
+""")
 
 nav_admin_delete_template = Template("""
 <div>

@@ -20,7 +20,7 @@ requirements = ['Flask', 'Flask-BS', 'Flask-Security', 'Flask-SQLAlchemy', 'WTFo
 
 setup(
     name="Flask-Navigate",
-    version="0.1.3",
+    version="0.1.4",
     author="Bill Schumacher",
     author_email="bill@servernet.co",
     description="Another flask extension that provides Navigation menus.",
