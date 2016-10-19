@@ -247,7 +247,7 @@ class NavDatastore(object):
     def get_all_nav(self):
         raise NotImplementedError
 
-    def create_nav(self, **kwargs):
+    def create_nav(self, *args, **kwargs):
         kwargs = self._create_nav_defaults(**kwargs)
         nav = self.nav_model(**kwargs)
         return self.__getattribute__('add')(nav)
@@ -275,9 +275,6 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
 
     def get_all_nav(self):
         return self.db.query(self.nav_model).all()
-
-
-
 
 
 def create_blueprint(state, import_name):

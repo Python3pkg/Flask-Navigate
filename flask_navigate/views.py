@@ -23,13 +23,13 @@ def admin_list_nav():
 def admin_add_nav():
     form = NavForm()
     if request.method == 'GET':
-        form.populate_obj(Nav())
         rendered_form = render_form_template(form)
-
         return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form))
     else:
-        if form.validate_on_submit():
-            return redirect(url_for('admin_list_nav'))
+        form.process(formdata=request.form)
+        if form.validate():
+            nav = _datastore.create_nav(**form.data_without_submit)
+            return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
         else:
             return nav_admin_add_nav_template.render(form=render_form_template(form))
 

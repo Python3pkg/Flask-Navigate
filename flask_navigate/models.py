@@ -124,6 +124,7 @@ class OrderedModelForm(ModelForm):
             for name in field_order:
                 if name == '*':
                     for key, f in iteritems(self._fields):
+                        print(f.type)
                         if key not in field_order:
                             temp_fields[key] = f
                 else:
@@ -138,6 +139,10 @@ class NavForm(OrderedModelForm):
     field_order = ('name', 'active', 'hidden', 'vertical', 'custom_tag_id', 'custom_tag_attributes', 'css_classes',
                    'image_url', 'repeat_image', '*')
     submit = SubmitField('Save', widget=FlexSubmitWidget())
+
+    @property
+    def data_without_submit(self):
+        return dict((name, f.data) for name, f in iteritems(self._fields) if not f.type == 'SubmitField')
 
 
 class NavItem(Base):
