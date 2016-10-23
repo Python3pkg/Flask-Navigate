@@ -281,6 +281,9 @@ class NavDatastore(object):
     def get_all_nav(self):
         raise NotImplementedError
 
+    def get_nav_item(self, id_or_name):
+        raise NotImplementedError
+
     def create_nav(self, *args, **kwargs):
         kwargs = self._create_nav_defaults(**kwargs)
         nav = self.nav_model(**kwargs)
@@ -310,6 +313,16 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
                 return self.db.query(self.nav_model).filter(self.nav_model.name == identifier).first()
         elif type(identifier) == int:
             return self.db.query(self.nav_model).get(identifier)
+        return None
+
+    def get_nav_item(self, identifier):
+        if type(identifier) == str:
+            if identifier.isdigit():
+                return self.db.query(self.nav_item_model).get(int(identifier))
+            else:
+                return self.db.query(self.nav_item_model).filter(self.nav_item_model.text == identifier).first()
+        elif type(identifier) == int:
+            return self.db.query(self.nav_item_model).get(identifier)
         return None
 
     def get_all_nav(self):
