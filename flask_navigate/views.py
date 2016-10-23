@@ -4,7 +4,7 @@ from werkzeug.local import LocalProxy
 from flask_wtf_flexwidgets import render_form_template, css_template
 from jinja2 import Template
 from ._compat import iteritems
-from .models import Nav, NavForm
+from .models import Nav, NavForm, NavItem, NavItemForm
 
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 
@@ -86,6 +86,11 @@ def admin_edit_nav(nav_id=None):
                                                         _navigate.blueprint_name,
                                                         _navigate.admin_list_nav_endpoint
                                                      ),
+                                                    nav_item_add_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_add_nav_item_endpoint
+                                                    ),
+                                                    nav=nav_obj,
                                                     url_for=url_for),
                                                  head="<style>" + css_template + "</style>")
         else:
@@ -100,7 +105,12 @@ def admin_edit_nav(nav_id=None):
                                                     nav_list_endpoint=dot(
                                                         _navigate.blueprint_name,
                                                         _navigate.admin_list_nav_endpoint
-                                                     ),
+                                                    ),
+                                                    nav_item_add_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_add_nav_item_endpoint
+                                                    ),
+                                                    nav=nav_obj,
                                                     url_for=url_for),
                                                  head="<style>" + css_template + "</style>")
 
@@ -128,8 +138,49 @@ def admin_delete_nav(nav_id=None):
     return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint)))
 
 
-def admin_add_nav_item():
-    pass
+def admin_add_nav_item(nav_id=None):
+    nav_obj = _datastore.get_nav(nav_id)
+    if nav_obj:
+        form = NavItemForm()
+        if request.method == 'GET':
+            rendered_form = render_form_template(form)
+            return render_content_with_bootstrap(body=nav_admin_add_nav_item_template.render(
+                                                        form=rendered_form,
+                                                        nav_list_endpoint=dot(
+                                                            _navigate.blueprint_name,
+                                                            _navigate.admin_list_nav_endpoint
+                                                        ),
+                                                        edit_nav_endpoint=dot(_navigate.blueprint_name,
+                                                                              _navigate.admin_edit_nav_endpoint),
+                                                        url_for=url_for,
+                                                        nav=nav_obj),
+                                                 head="<style>" + css_template + "</style>")
+        else:
+            form.process(formdata=request.form)
+            if form.validate():
+                flash("Navigation Menu Item Added", 'success')
+                _datastore.create_nav_item(nav_id=nav_obj.id, **form.data_without_submit)
+                return redirect(url_for(dot(_navigate.blueprint_name,
+                                            _navigate.admin_edit_nav_endpoint),
+                                        nav_id=nav_obj.id))
+            else:
+                rendered_form = render_form_template(form)
+                return render_content_with_bootstrap(body=nav_admin_add_nav_item_template.render(
+                                                            form=rendered_form,
+                                                            nav_list_endpoint=dot(
+                                                                _navigate.blueprint_name,
+                                                                _navigate.admin_list_nav_endpoint
+                                                            ),
+                                                            edit_nav_endpoint=dot(_navigate.blueprint_name,
+                                                                                  _navigate.admin_edit_nav_endpoint),
+                                                            url_for=url_for,
+                                                            nav=nav_obj),
+                                                     head="<style>" + css_template + "</style>")
+
+        #  return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_edit_nav_endpoint),
+        #                          nav_id=nav_obj.nav_id))
+    flash('Navigation item not found!', 'error')
+    return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint)))
 
 
 def admin_edit_nav_item():
@@ -166,12 +217,32 @@ nav_admin_add_nav_template = Template("""
 """)
 
 nav_admin_edit_nav_template = Template("""
-<div>
+{% macro render_admin_nav_item(nav_item) %}
     <div>
-        <h4>Edit Navigation Menu</h4>
-        {{ form }}
-        <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
+    <a href="#">{{ nav_item.text }}</a> - <a href="#">Delete</a>
+
+    {% for child in nav_item.children() %}
+        <div style="margin-left: 5px;">{{ render_admin_nav_item(child) }}</div>
+    {% endfor %}
     </div>
+{% endmacro %}
+<div>
+    <div class="flex_container">
+        <div class="flex_container_item">
+            <h4>Edit Navigation Menu</h4>
+        {{ form }}
+        </div>
+        <div class="flex_container_item">
+            <h4>Edit Navigation Menu Items</h4>
+            {% for nav_item in nav.top_level_items() %}
+                {{ render_admin_nav_item(nav_item) }}
+            {% endfor %}
+            <br>
+            <a href="{{ url_for(nav_item_add_endpoint, nav_id=nav.id) }}">Create Nav Item</a>
+        </div>
+    </div>
+    <br>
+    <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
 </div>
 """)
 
@@ -198,6 +269,17 @@ nav_admin_delete_template = Template("""
             <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
         </form>
     {% endif %}
+    </div>
+</div>
+""")
+
+
+nav_admin_add_nav_item_template = Template("""
+<div>
+    <div>
+        <h4>Add Navigation Menu Item</h4>
+        {{ form }}
+        <a href="{{ url_for(edit_nav_endpoint, nav_id=nav.id) }}">Back</a>
     </div>
 </div>
 """)

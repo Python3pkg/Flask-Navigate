@@ -151,7 +151,7 @@ class NavItem(Base):
     id = Column(Integer(), primary_key=True)
     image_url = Column(String(256), info={
                             'label': "Image URL",
-                            'widget': FlexStringWidget,
+                            'widget': FlexStringWidget(),
                         }
                        )
     new_banner = Column(Boolean(), info={
@@ -224,4 +224,10 @@ class NavItemForm(OrderedModelForm):
     class Meta:
         model = NavItem
 
+    field_order = ('text', 'active', 'new_banner', 'drop_down', 'custom_tag_id', 'custom_tag_attributes', 'css_classes',
+                   'image_url', 'repeat_image', 'target_url', 'javascript_onclick', 'endpoint', '*')
     submit = SubmitField('Save')
+
+    @property
+    def data_without_submit(self):
+        return dict((name, f.data) for name, f in iteritems(self._fields) if not f.type == 'SubmitField')

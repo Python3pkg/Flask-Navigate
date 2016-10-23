@@ -23,7 +23,7 @@ from werkzeug.local import LocalProxy
 from jinja2 import Template
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from ._compat import PY2, text_type
+from ._compat import PY2, text_type, iteritems
 from sqlalchemy.engine.reflection import Inspector
 from flask_bs import Bootstrap
 from flask_navigate.views import admin_add_nav, admin_add_nav_item, admin_delete_nav, admin_delete_nav_item, \
@@ -288,6 +288,8 @@ class NavDatastore(object):
 
     def create_nav_item(self, **kwargs):
         kwargs = self._create_nav_item_defaults(**kwargs)
+        for key, value in iteritems(kwargs):
+            print("{}{}".format(key, value))
         nav_item = self.nav_item_model(**kwargs)
         return self.__getattribute__('add')(nav_item)
 
