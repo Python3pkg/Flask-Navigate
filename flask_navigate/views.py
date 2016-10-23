@@ -23,6 +23,8 @@ def admin_list_nav():
                                                                      _navigate.admin_add_nav_endpoint),
                                                 edit_nav_endpoint=dot(_navigate.blueprint_name,
                                                                       _navigate.admin_edit_nav_endpoint),
+                                                delete_nav_endpoint=dot(_navigate.blueprint_name,
+                                                                        _navigate.admin_delete_nav_endpoint),
                                                 url_for=url_for),
                                          head="<style>" + css_template + "</style>")
 
@@ -31,7 +33,13 @@ def admin_add_nav():
     form = NavForm()
     if request.method == 'GET':
         rendered_form = render_form_template(form)
-        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form),
+        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(
+                                                    form=rendered_form,
+                                                    nav_list_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_list_nav_endpoint
+                                                    ),
+                                                    url_for=url_for),
                                              head="<style>" + css_template + "</style>")
     else:
         form.process(formdata=request.form)
@@ -39,7 +47,13 @@ def admin_add_nav():
             nav = _datastore.create_nav(**form.data_without_submit)
             return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
         rendered_form = render_form_template(form)
-        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form),
+        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(
+                                                    form=rendered_form,
+                                                    nav_list_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_list_nav_endpoint
+                                                    ),
+                                                    url_for=url_for),
                                              head="<style>" + css_template + "</style>")
 
 
@@ -66,21 +80,52 @@ def admin_edit_nav(nav_id=None):
         populate_form(form, nav_obj)
         if request.method == 'GET':
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form),
+            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(
+                                                    form=rendered_form,
+                                                    nav_list_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_list_nav_endpoint
+                                                     ),
+                                                    url_for=url_for),
                                                  head="<style>" + css_template + "</style>")
         else:
+            form.process(formdata=request.form)
             if form.validate():
                 flash("Nav menu updated", "success")
+                update_object(form, nav_obj)
                 return redirect(url_for(_navigate.blueprint_name + '.admin_list_nav'))
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form),
+            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(
+                                                    form=rendered_form,
+                                                    nav_list_endpoint=dot(
+                                                        _navigate.blueprint_name,
+                                                        _navigate.admin_list_nav_endpoint
+                                                     ),
+                                                    url_for=url_for),
                                                  head="<style>" + css_template + "</style>")
+
     flash("Nav menu not found", "error")
     return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint)))
 
 
-def admin_delete_nav():
-    pass
+def admin_delete_nav(nav_id=None):
+    nav_obj = _datastore.get_nav(nav_id)
+    if nav_obj:
+        if request.method == 'GET':
+            return render_content_with_bootstrap(body=nav_admin_delete_template.render(
+                                                        nav_list_endpoint=dot(
+                                                            _navigate.blueprint_name,
+                                                            _navigate.admin_list_nav_endpoint
+                                                         ),
+                                                        url_for=url_for,
+                                                        nav=nav_obj),
+                                                 head="<style>" + css_template + "</style>")
+        else:
+            flash('Navigation menu deleted', 'success')
+            _datastore.delete(nav_obj)
+            return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint)))
+    flash('Navigation menu not found!', 'error')
+    return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint)))
 
 
 def admin_add_nav_item():
@@ -100,7 +145,7 @@ nav_admin_list_template = Template("""
     <div>
         <h4>Navigation Menus</h4>
     {%- for nav in navs -%}
-        <div><a href="{{ url_for(edit_nav_endpoint, nav_id=nav.id) }}">{{ nav.name }}</a> -=- <a href="#">Delete</a></div>
+        <div><a href="{{ url_for(edit_nav_endpoint, nav_id=nav.id) }}">{{ nav.name }}</a> -=- <a href="{{ url_for(delete_nav_endpoint, nav_id=nav.id) }}">Delete</a></div>
     {% else %}
         <div>No menus created yet.</div>
     {%- endfor -%}
@@ -115,6 +160,7 @@ nav_admin_add_nav_template = Template("""
     <div>
         <h4>Add Navigation Menu</h4>
         {{ form }}
+        <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
     </div>
 </div>
 """)
@@ -124,6 +170,7 @@ nav_admin_edit_nav_template = Template("""
     <div>
         <h4>Edit Navigation Menu</h4>
         {{ form }}
+        <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
     </div>
 </div>
 """)
@@ -148,6 +195,7 @@ nav_admin_delete_template = Template("""
                     <input type="submit" value="Delete">
                 </div>
             </div>
+            <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
         </form>
     {% endif %}
     </div>

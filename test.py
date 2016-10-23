@@ -17,6 +17,7 @@ from flask_navigate import Navigate, render_nav
 from flask_bs import render_content_with_bootstrap
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'super_secret_testing_key'
 nav = Navigate(app).init_app(app)
 
 
