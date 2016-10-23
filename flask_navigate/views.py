@@ -70,7 +70,7 @@ def admin_edit_nav(nav_id=None):
             if form.validate():
                 flash("Nav menu updated", "success")
                 update_object(form, nav_obj)
-                return redirect(url_for(context['nav_list_endpoint']))
+                return redirect(url_for(context['list_nav_endpoint']))
             rendered_form = render_form_template(form)
             return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form,
                                                                                          nav=nav_obj, **context),
