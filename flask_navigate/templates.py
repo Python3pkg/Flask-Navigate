@@ -21,7 +21,7 @@ nav_admin_add_nav_template = Template("""
     <div>
         <h4>Add Navigation Menu</h4>
         {{ form }}
-        <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
+        <a href="{{ url_for(list_nav_endpoint) }}">Back</a>
     </div>
 </div>
 """)
@@ -29,7 +29,7 @@ nav_admin_add_nav_template = Template("""
 nav_admin_edit_nav_template = Template("""
 {% macro render_admin_nav_item(nav_item) %}
     <div>
-    <a href="#">{{ nav_item.text }}</a> - <a href="{{ url_for(nav_item_delete_endpoint, nav_item_id=nav_item.id) }}">Delete</a>
+    <a href="{{ url_for(edit_nav_item_endpoint, nav_item_id=nav_item.id) }}">{{ nav_item.text }}</a> - <a href="{{ url_for(delete_nav_item_endpoint, nav_item_id=nav_item.id) }}">Delete</a>
 
     {% for child in nav_item.children() %}
         <div style="margin-left: 5px;">{{ render_admin_nav_item(child) }}</div>
@@ -48,11 +48,11 @@ nav_admin_edit_nav_template = Template("""
                 {{ render_admin_nav_item(nav_item) }}
             {% endfor %}
             <br>
-            <a href="{{ url_for(nav_item_add_endpoint, nav_id=nav.id) }}">Create Nav Item</a>
+            <a href="{{ url_for(add_nav_item_endpoint, nav_id=nav.id) }}">Create Nav Item</a>
         </div>
     </div>
     <br>
-    <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
+    <a href="{{ url_for(list_nav_endpoint) }}">Back</a>
 </div>
 """)
 
@@ -70,7 +70,7 @@ nav_admin_delete_template = Template("""
         <form method="post">
             <div>
                 <div>
-                    <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
+                    <a href="{{ url_for(list_nav_endpoint) }}">Back</a>
                 </div>
                 <div>
                     <input type="submit" value="Delete">
@@ -96,7 +96,7 @@ nav_item_admin_delete_template = Template("""
         <form method="post">
             <div>
                 <div>
-                    <a href="{{ url_for(nav_list_endpoint) }}">Back</a>
+                    <a href="{{ url_for(list_nav_endpoint) }}">Back</a>
                 </div>
                 <div>
                     <input type="submit" value="Delete">
@@ -115,5 +115,35 @@ nav_admin_add_nav_item_template = Template("""
         {{ form }}
         <a href="{{ url_for(edit_nav_endpoint, nav_id=nav.id) }}">Back</a>
     </div>
+</div>
+""")
+
+nav_admin_edit_nav_item_template = Template("""
+{% macro render_admin_nav_item(nav_item) %}
+    <div>
+    <a href="{{ url_for(edit_nav_item_endpoint, nav_item_id=nav_item.id) }}">{{ nav_item.text }}</a> - <a href="{{ url_for(delete_nav_item_endpoint, nav_item_id=nav_item.id) }}">Delete</a>
+
+    {% for child in nav_item.children() %}
+        <div style="margin-left: 5px;">{{ render_admin_nav_item(child) }}</div>
+    {% endfor %}
+    </div>
+{% endmacro %}
+<div>
+    <div class="flex_container">
+        <div class="flex_container_item">
+            <h4>Edit Navigation Item Menu</h4>
+        {{ form }}
+        </div>
+        <div class="flex_container_item">
+            <h4>Edit Navigation Menu Sub Items</h4>
+            {% for nav_item_child in nav_item.children() %}
+                {{ render_admin_nav_item(nav_item_child) }}
+            {% endfor %}
+            <br>
+            <a href="{{ url_for(add_nav_item_endpoint, nav_id=nav_item.nav_id) }}">Create Nav Item</a>
+        </div>
+    </div>
+    <br>
+    <a href="{{ url_for(edit_nav_endpoint, nav_id=nav_item.nav_id) }}">Back</a>
 </div>
 """)
