@@ -28,15 +28,20 @@ def dot(a, b):
     return "{}.{}".format(a, b)
 
 
+def endpoint(ep):
+    return dot(_navigate.blueprint_name, ep)
+
+
 def view_context():
     return {
-        'add_nav_endpoint': dot(_navigate.blueprint_name, _navigate.admin_add_nav_endpoint),
-        'edit_nav_endpoint': dot(_navigate.blueprint_name, _navigate.admin_edit_nav_endpoint),
-        'delete_nav_endpoint': dot(_navigate.blueprint_name, _navigate.admin_delete_nav_endpoint),
-        'list_nav_endpoint': dot(_navigate.blueprint_name, _navigate.admin_list_nav_endpoint),
-        'add_nav_item_endpoint': dot(_navigate.blueprint_name, _navigate.admin_add_nav_item_endpoint),
-        'edit_nav_item_endpoint': dot(_navigate.blueprint_name, _navigate.admin_edit_nav_item_endpoint),
-        'delete_nav_item_endpoint': dot(_navigate.blueprint_name, _navigate.admin_delete_nav_item_endpoint),
+        'add_nav_endpoint': endpoint(_navigate.admin_add_nav_endpoint),
+        'edit_nav_endpoint': endpoint(_navigate.admin_edit_nav_endpoint),
+        'delete_nav_endpoint': endpoint(_navigate.admin_delete_nav_endpoint),
+        'list_nav_endpoint': endpoint(_navigate.admin_list_nav_endpoint),
+        'add_nav_item_endpoint': endpoint(_navigate.admin_add_nav_item_endpoint),
+        'add_sub_nav_item_endpoint': endpoint(_navigate.admin_add_sub_nav_item_endpoint),
+        'edit_nav_item_endpoint': endpoint(_navigate.admin_edit_nav_item_endpoint),
+        'delete_nav_item_endpoint': endpoint(_navigate.admin_delete_nav_item_endpoint),
         'url_for': url_for,
 
     }

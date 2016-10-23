@@ -27,7 +27,7 @@ from ._compat import PY2, text_type, iteritems
 from sqlalchemy.engine.reflection import Inspector
 from flask_bs import Bootstrap
 from flask_navigate.views import admin_add_nav, admin_add_nav_item, admin_delete_nav, admin_delete_nav_item, \
-    admin_edit_nav, admin_edit_nav_item, admin_list_nav
+    admin_edit_nav, admin_edit_nav_item, admin_list_nav, admin_add_sub_nav_item
 from flask_navigate.models import Nav, NavItem, Base
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
@@ -66,6 +66,7 @@ _default_config = {
     'ADMIN_DELETE_NAV_ENDPOINT': 'admin_delete_nav',
     'ADMIN_LIST_NAV_ITEM_ENDPOINT': 'admin_list_nav_item',
     'ADMIN_ADD_NAV_ITEM_ENDPOINT': 'admin_add_nav_item',
+    'ADMIN_ADD_NAV_SUB_ITEM_ENDPOINT': 'admin_add_sub_nav_item',
     'ADMIN_EDIT_NAV_ITEM_ENDPOINT': 'admin_edit_nav_item',
     'ADMIN_DELETE_NAV_ITEM_ENDPOINT': 'admin_delete_nav_item',
     'ADMIN_LIST_NAV_VIEW': admin_list_nav,
@@ -74,6 +75,7 @@ _default_config = {
     'ADMIN_DELETE_NAV_VIEW': admin_delete_nav,
     # 'ADMIN_LIST_NAV_ITEM_VIEW': admin_list_nav_item,      Is this even needed? Maybe... Maybe.
     'ADMIN_ADD_NAV_ITEM_VIEW': admin_add_nav_item,
+    'ADMIN_ADD_SUB_NAV_ITEM_VIEW': admin_add_sub_nav_item,
     'ADMIN_EDIT_NAV_ITEM_VIEW': admin_edit_nav_item,
     'ADMIN_DELETE_NAV_ITEM_VIEW': admin_delete_nav_item,
 
@@ -121,6 +123,7 @@ class _NavigateState(object):
         self.admin_delete_nav_url = '/admin/nav/delete'
         self.admin_list_nav_item_url = '/admin/nav/item/list'
         self.admin_add_nav_item_url = '/admin/nav/item/add'
+        self.admin_add_sub_nav_item_url = '/admin/nav/item/sub/add'
         self.admin_edit_nav_item_url = '/admin/nav/item/edit'
         self.admin_delete_nav_item_url = '/admin/nav/item/delete'
         self.admin_list_nav_endpoint = 'admin_list_nav'
@@ -129,6 +132,7 @@ class _NavigateState(object):
         self.admin_delete_nav_endpoint = 'admin_delete_nav'
         self.admin_list_nav_item_endpoint = 'admin_list_nav_item'
         self.admin_add_nav_item_endpoint = 'admin_add_nav_item'
+        self.admin_add_sub_nav_item_endpoint = 'admin_add_sub_nav_item'
         self.admin_edit_nav_item_endpoint = 'admin_edit_nav_item'
         self.admin_delete_nav_item_endpoint = 'admin_delete_nav_item'
         self.admin_list_nav_view = admin_list_nav
@@ -137,6 +141,7 @@ class _NavigateState(object):
         self.admin_delete_nav_view = admin_delete_nav
         # self.admin_list_nav_item_view = admin_list_nav_item   #  More of the same. needed?
         self.admin_add_nav_item_view = admin_add_nav_item
+        self.admin_add_sub_nav_item_view = admin_add_sub_nav_item
         self.admin_edit_nav_item_view = admin_edit_nav_item
         self.admin_delete_nav_item_view = admin_delete_nav_item
         for key, value in kwargs.items():
@@ -361,6 +366,11 @@ def create_blueprint(state, import_name):
     admin_routing.route(state.admin_add_nav_item_url + slash_url_suffix(state.admin_add_nav_item_url, '<nav_id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_add_nav_item_endpoint)(state.admin_add_nav_item_view)
+
+    admin_routing.route(state.admin_add_sub_nav_item_url + slash_url_suffix(state.admin_add_sub_nav_item_url,
+                                                                            '<nav_item_id>'),
+                        methods=['GET', 'POST'],
+                        endpoint=state.admin_add_sub_nav_item_endpoint)(state.admin_add_sub_nav_item_view)
 
     admin_routing.route(state.admin_edit_nav_item_url + slash_url_suffix(state.admin_edit_nav_item_url,
                                                                          '<nav_item_id>'),

@@ -132,6 +132,16 @@ nav_admin_add_nav_item_template = Template("""
 </div>
 """)
 
+nav_admin_add_sub_nav_item_template = Template("""
+<div>
+    <div>
+        <h4>Add Navigation Menu Item</h4>
+        {{ form }}
+        <a href="{{ url_for(edit_nav_endpoint, nav_id=nav_item.nav_id) }}">Back</a>
+    </div>
+</div>
+""")
+
 nav_admin_edit_nav_item_template = Template("""
 {% macro render_admin_nav_item(nav_item) %}
     <div>
@@ -154,7 +164,7 @@ nav_admin_edit_nav_item_template = Template("""
                 {{ render_admin_nav_item(nav_item_child) }}
             {% endfor %}
             <br>
-            <a href="{{ url_for(add_nav_item_endpoint, nav_id=nav_item.nav_id) }}">Create Nav Item</a>
+            <a href="{{ url_for(add_sub_nav_item_endpoint, nav_item_id=nav_item.id) }}">Create Sub Nav Item</a>
         </div>
     </div>
     <br>

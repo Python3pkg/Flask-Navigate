@@ -24,7 +24,7 @@ from .models import NavForm, NavItemForm
 from .helper import view_context, populate_form, update_object
 from .templates import nav_admin_add_nav_item_template, nav_admin_add_nav_template, nav_admin_delete_template, \
     nav_admin_edit_nav_template, nav_admin_list_template, nav_item_admin_delete_template, \
-    nav_admin_edit_nav_item_template
+    nav_admin_edit_nav_item_template, nav_admin_add_sub_nav_item_template
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 
 _datastore = LocalProxy(lambda: _navigate.datastore)
@@ -117,9 +117,35 @@ def admin_add_nav_item(nav_id=None):
                 return render_content_with_bootstrap(body=nav_admin_add_nav_item_template.render(
                                                             form=rendered_form, nav=nav_obj, **context),
                                                      head="<style>" + css_template + "</style>")
+    flash('Navigation Item Not Found!', 'error')
+    return redirect(url_for(context['list_nav_endpoint']))
 
-        #  return redirect(url_for(dot(_navigate.blueprint_name, _navigate.admin_edit_nav_endpoint),
-        #                          nav_id=nav_obj.nav_id))
+
+def admin_add_sub_nav_item(nav_item_id=None):
+    nav_item_obj = _datastore.get_nav_item(nav_item_id)
+    context = view_context()
+    if nav_item_obj:
+        form = NavItemForm()
+        if request.method == 'GET':
+            rendered_form = render_form_template(form)
+            return render_content_with_bootstrap(body=nav_admin_add_sub_nav_item_template.render(
+                                                        form=rendered_form, nav=nav_item_obj.nav, nav_item=nav_item_obj,
+                                                        **context),
+                                                 head="<style>" + css_template + "</style>")
+        else:
+            form.process(formdata=request.form)
+            if form.validate():
+                flash("Navigation Menu Item Added", 'success')
+                _datastore.create_nav_item(nav_id=nav_item_obj.nav_id, parent_id=nav_item_obj.id,
+                                           **form.data_without_submit)
+                return redirect(url_for(context['edit_nav_endpoint'],
+                                        nav_id=nav_item_obj.nav_id))
+            else:
+                rendered_form = render_form_template(form)
+                return render_content_with_bootstrap(body=nav_admin_add_sub_nav_item_template.render(
+                                                        form=rendered_form, nav=nav_item_obj.nav, nav_item=nav_item_obj,
+                                                        **context),
+                                                     head="<style>" + css_template + "</style>")
     flash('Navigation Item Not Found!', 'error')
     return redirect(url_for(context['list_nav_endpoint']))
 
