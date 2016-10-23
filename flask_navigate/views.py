@@ -30,11 +30,14 @@ _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 _datastore = LocalProxy(lambda: _navigate.datastore)
 
 
+def render(template, **kwargs):
+    return render_content_with_bootstrap(body=template.render(**kwargs), head="<style>" + css_template + "</style>")
+
+
 def admin_list_nav():
     navigation_menus = _datastore.get_all_nav()
     context = view_context()
-    return render_content_with_bootstrap(body=nav_admin_list_template.render(navs=navigation_menus, **context),
-                                         head="<style>" + css_template + "</style>")
+    return render(nav_admin_list_template, navs=navigation_menus, **context)
 
 
 def admin_add_nav():
@@ -42,16 +45,14 @@ def admin_add_nav():
     context = view_context()
     if request.method == 'GET':
         rendered_form = render_form_template(form)
-        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form, **context),
-                                             head="<style>" + css_template + "</style>")
+        return render(nav_admin_add_nav_template, form=rendered_form, **context)
     else:
         form.process(formdata=request.form)
         if form.validate():
             nav = _datastore.create_nav(**form.data_without_submit)
             return redirect(url_for(context['edit_nav_endpoint'], nav_id=nav.id))
         rendered_form = render_form_template(form)
-        return render_content_with_bootstrap(body=nav_admin_add_nav_template.render(form=rendered_form, **context),
-                                             head="<style>" + css_template + "</style>")
+        return render(nav_admin_add_nav_template, form=rendered_form, **context)
 
 
 def admin_edit_nav(nav_id=None):
@@ -62,9 +63,7 @@ def admin_edit_nav(nav_id=None):
         populate_form(form, nav_obj)
         if request.method == 'GET':
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form,
-                                                                                         nav=nav_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_edit_nav_template, form=rendered_form, nav=nav_obj, **context)
         else:
             form.process(formdata=request.form)
             if form.validate():
@@ -72,10 +71,7 @@ def admin_edit_nav(nav_id=None):
                 update_object(form, nav_obj)
                 return redirect(url_for(context['list_nav_endpoint']))
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(form=rendered_form,
-                                                                                         nav=nav_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
-
+            return render(nav_admin_edit_nav_template, form=rendered_form, nav=nav_obj, **context)
     flash("Nav menu not found", "error")
     return redirect(url_for(context['list_nav_endpoint']))
 
@@ -85,8 +81,7 @@ def admin_delete_nav(nav_id=None):
     context = view_context()
     if nav_obj:
         if request.method == 'GET':
-            return render_content_with_bootstrap(body=nav_admin_delete_template.render(nav=nav_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_delete_template, nav=nav_obj, **context)
         else:
             flash('Navigation menu deleted', 'success')
             _datastore.delete(nav_obj)
@@ -102,9 +97,7 @@ def admin_add_nav_item(nav_id=None):
         form = NavItemForm()
         if request.method == 'GET':
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_add_nav_item_template.render(
-                                                        form=rendered_form, nav=nav_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_add_nav_item_template, form=rendered_form, nav=nav_obj, **context)
         else:
             form.process(formdata=request.form)
             if form.validate():
@@ -114,9 +107,7 @@ def admin_add_nav_item(nav_id=None):
                                         nav_id=nav_obj.id))
             else:
                 rendered_form = render_form_template(form)
-                return render_content_with_bootstrap(body=nav_admin_add_nav_item_template.render(
-                                                            form=rendered_form, nav=nav_obj, **context),
-                                                     head="<style>" + css_template + "</style>")
+                return render(nav_admin_add_nav_item_template, form=rendered_form, nav=nav_obj, **context)
     flash('Navigation Item Not Found!', 'error')
     return redirect(url_for(context['list_nav_endpoint']))
 
@@ -128,10 +119,8 @@ def admin_add_sub_nav_item(nav_item_id=None):
         form = NavItemForm()
         if request.method == 'GET':
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_add_sub_nav_item_template.render(
-                                                        form=rendered_form, nav=nav_item_obj.nav, nav_item=nav_item_obj,
-                                                        **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_add_sub_nav_item_template, form=rendered_form, nav=nav_item_obj.nav,
+                          nav_item=nav_item_obj, **context)
         else:
             form.process(formdata=request.form)
             if form.validate():
@@ -142,10 +131,8 @@ def admin_add_sub_nav_item(nav_item_id=None):
                                         nav_id=nav_item_obj.nav_id))
             else:
                 rendered_form = render_form_template(form)
-                return render_content_with_bootstrap(body=nav_admin_add_sub_nav_item_template.render(
-                                                        form=rendered_form, nav=nav_item_obj.nav, nav_item=nav_item_obj,
-                                                        **context),
-                                                     head="<style>" + css_template + "</style>")
+                return render(nav_admin_add_sub_nav_item_template, form=rendered_form, nav=nav_item_obj.nav,
+                              nav_item=nav_item_obj, **context)
     flash('Navigation Item Not Found!', 'error')
     return redirect(url_for(context['list_nav_endpoint']))
 
@@ -158,9 +145,7 @@ def admin_edit_nav_item(nav_item_id=None):
         populate_form(form, nav_item_obj)
         if request.method == 'GET':
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_item_template.render(
-                                                    form=rendered_form, nav_item=nav_item_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_edit_nav_item_template, form=rendered_form, nav_item=nav_item_obj, **context)
         else:
             form.process(formdata=request.form)
             if form.validate():
@@ -168,9 +153,7 @@ def admin_edit_nav_item(nav_item_id=None):
                 update_object(form, nav_item_obj)
                 return redirect(url_for(context['list_nav_endpoint']))
             rendered_form = render_form_template(form)
-            return render_content_with_bootstrap(body=nav_admin_edit_nav_template.render(
-                                                    form=rendered_form, nav_item=nav_item_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_admin_edit_nav_template, form=rendered_form, nav_item=nav_item_obj, **context)
 
     flash('Navigation Item Not Found!', 'error')
     return redirect(url_for(context['list_nav_endpoint']))
@@ -181,9 +164,7 @@ def admin_delete_nav_item(nav_item_id=None):
     context = view_context()
     if nav_item_obj:
         if request.method == 'GET':
-            return render_content_with_bootstrap(body=nav_item_admin_delete_template.render(
-                                                    nav_item=nav_item_obj, **context),
-                                                 head="<style>" + css_template + "</style>")
+            return render(nav_item_admin_delete_template, nav_item=nav_item_obj, **context)
         else:
             flash('Navigation Menu Item Deleted', 'success')
             nav_id = nav_item_obj.nav_id
