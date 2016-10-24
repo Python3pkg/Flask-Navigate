@@ -40,7 +40,6 @@ nav_admin_list_template = Template(flashed_messages_template + """
 </div>
 """)
 
-
 nav_admin_add_nav_template = Template(flashed_messages_template + """
 <div>
     <div>

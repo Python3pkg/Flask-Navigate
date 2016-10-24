@@ -13,8 +13,9 @@
 ** will be met: https://www.gnu.org/licenses/lgpl.html.
 """
 from flask import Flask
-from flask_navigate import Navigate, render_nav
 from flask_bs import render_content_with_bootstrap
+
+from flask_navigate import Navigate, render_nav
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super_secret_testing_key'
@@ -24,6 +25,7 @@ nav = Navigate(app).init_app(app)
 @app.route("/")
 def hello():
     return render_content_with_bootstrap(body=render_nav())
+
 
 if __name__ == "__main__":
     new_nav = nav.datastore.create_nav(name="Main", hidden=False)

@@ -16,19 +16,21 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
-from flask import current_app, Blueprint, render_template, request, url_for, redirect
-from flask_sqlalchemy import SQLAlchemy
+from flask import current_app, Blueprint, render_template, request, url_for
+from flask_bs import Bootstrap
 from flask_security import current_user
-from werkzeug.local import LocalProxy
+from flask_sqlalchemy import SQLAlchemy
 from jinja2 import Template
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from ._compat import PY2, text_type, iteritems
 from sqlalchemy.engine.reflection import Inspector
-from flask_bs import Bootstrap
+from sqlalchemy.orm import sessionmaker
+from werkzeug.local import LocalProxy
+
+from flask_navigate.models import Nav, NavItem, Base
 from flask_navigate.views import admin_add_nav, admin_add_nav_item, admin_delete_nav, admin_delete_nav_item, \
     admin_edit_nav, admin_edit_nav_item, admin_list_nav, admin_add_sub_nav_item
-from flask_navigate.models import Nav, NavItem, Base
+from ._compat import PY2, text_type, iteritems
+
 # Find the stack on which we want to store the database connection.
 # Starting with Flask 0.9, the _app_ctx_stack is the correct one,
 # before that we need to use the _request_ctx_stack.
@@ -79,8 +81,6 @@ _default_config = {
     'ADMIN_ADD_SUB_NAV_ITEM_VIEW': admin_add_sub_nav_item,
     'ADMIN_EDIT_NAV_ITEM_VIEW': admin_edit_nav_item,
     'ADMIN_DELETE_NAV_ITEM_VIEW': admin_delete_nav_item,
-
-
 }
 
 
@@ -111,7 +111,6 @@ def _get_state(app, datastore, **kwargs):
 
 
 class _NavigateState(object):
-
     def __init__(self, **kwargs):
         self.blueprint_name = ""
         self.url_prefix = ""
@@ -151,7 +150,6 @@ class _NavigateState(object):
 
 
 class Navigate(object):
-
     def __init__(self, app=None, datastore=None, **kwargs):
         self.app = app
         self.datastore = datastore
@@ -248,6 +246,7 @@ class Datastore(object):
     def get(self, model, identifier):
         raise NotImplementedError
 
+
 class SQLAlchemyDatastore(Datastore):
     def commit(self):
         self.db.commit()
@@ -320,6 +319,7 @@ class SQLAlchemyNavDataStore(SQLAlchemyDatastore, NavDatastore):
     """A SQLAlchemy datastore implementation for Flask-Navigate that assumes the
     use of the Flask-SQLAlchemy extension.
     """
+
     def __init__(self, db, nav_model, nav_item_model):
         SQLAlchemyDatastore.__init__(self, db)
         NavDatastore.__init__(self, nav_model, nav_item_model)

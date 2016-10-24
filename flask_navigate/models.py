@@ -16,10 +16,10 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
-from wtforms_alchemy import ModelForm
-from wtforms import SubmitField
 from flask import current_app
 from flask_wtf_flexwidgets import FlexStringWidget, FlexBoolWidget, FlexSubmitWidget
+from wtforms import SubmitField
+from wtforms_alchemy import ModelForm
 
 try:
     from collections import OrderedDict
@@ -92,43 +92,43 @@ class Nav(Base):
     __tablename__ = 'fnav_nav'
     id = Column(Integer(), primary_key=True)
     name = Column(String(256), info={
-                            'label': "Name",
-                            'widget': FlexStringWidget(),
-                        },
+        'label': "Name",
+        'widget': FlexStringWidget(),
+    },
                   nullable=False
                   )
     active = Column(Boolean(), info={
-                            'label': "Active",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Active",
+        'widget': FlexBoolWidget(),
+    })
     hidden = Column(Boolean(), info={
-                            'label': "Hidden",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Hidden",
+        'widget': FlexBoolWidget(),
+    })
     vertical = Column(Boolean(), info={
-                            'label': "Vertical",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Vertical",
+        'widget': FlexBoolWidget(),
+    })
     custom_tag_id = Column(String(256), info={
-                            'label': "Custom HTML Tag ID",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Custom HTML Tag ID",
+        'widget': FlexStringWidget(),
+    })
     custom_tag_attributes = Column(Text(), info={
-                            'label': "Custom HTML Tag Attributes",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Custom HTML Tag Attributes",
+        'widget': FlexStringWidget(),
+    })
     css_classes = Column(String(256), info={
-                            'label': "CSS Classes",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "CSS Classes",
+        'widget': FlexStringWidget(),
+    })
     image_url = Column(String(256), info={
-                            'label': "Image URL",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Image URL",
+        'widget': FlexStringWidget(),
+    })
     repeat_image = Column(Boolean(), info={
-                            'label': "Repeat Image",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Repeat Image",
+        'widget': FlexBoolWidget(),
+    })
     info = {
         'label': "Navigation Menu",
     }
@@ -157,6 +157,7 @@ class OrderedModelForm(ModelForm):
 class NavForm(OrderedModelForm):
     class Meta:
         model = Nav
+
     field_order = ('name', 'active', 'hidden', 'vertical', 'custom_tag_id', 'custom_tag_attributes', 'css_classes',
                    'image_url', 'repeat_image', '*')
     submit = SubmitField('Save', widget=FlexSubmitWidget())
@@ -170,59 +171,59 @@ class NavItem(Base):
     __tablename__ = 'fnav_nav_item'
     id = Column(Integer(), primary_key=True)
     image_url = Column(String(256), info={
-                            'label': "Image URL",
-                            'widget': FlexStringWidget(),
-                        }
+        'label': "Image URL",
+        'widget': FlexStringWidget(),
+    }
                        )
     new_banner = Column(Boolean(), info={
-                            'label': "Display New Banner",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Display New Banner",
+        'widget': FlexBoolWidget(),
+    })
     drop_down = Column(Boolean(), info={
-                            'label': "Is Drop Down",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Is Drop Down",
+        'widget': FlexBoolWidget(),
+    })
     active = Column(Boolean(), info={
-                            'label': "Active",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Active",
+        'widget': FlexBoolWidget(),
+    })
     # Will stretch if False
     repeat_image = Column(Boolean(), info={
-                            'label': "Repeat Image",
-                            'widget': FlexBoolWidget(),
-                        })
+        'label': "Repeat Image",
+        'widget': FlexBoolWidget(),
+    })
     parent_id = Column(Integer(), ForeignKey('fnav_nav_item.id'), default=None)
     parent = relationship('NavItem', foreign_keys='NavItem.parent_id', uselist=False)
     text = Column(String(256), info={
-                            'label': "Text",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Text",
+        'widget': FlexStringWidget(),
+    })
     target_url = Column(String(256), info={
-                            'label': "URL Target",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "URL Target",
+        'widget': FlexStringWidget(),
+    })
     javascript_onclick = Column(Text(), info={
-                            'label': "Javascript ONCLICK=",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Javascript ONCLICK=",
+        'widget': FlexStringWidget(),
+    })
     custom_tag_attributes = Column(Text(), info={
-                            'label': "Custom HTML Tag Attributes",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Custom HTML Tag Attributes",
+        'widget': FlexStringWidget(),
+    })
     css_classes = Column(String(256), info={
-                            'label': "CSS Classes",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "CSS Classes",
+        'widget': FlexStringWidget(),
+    })
     custom_tag_id = Column(String(256), info={
-                            'label': "Custom HTML Tag ID",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "Custom HTML Tag ID",
+        'widget': FlexStringWidget(),
+    })
     nav_id = Column(Integer(), ForeignKey('fnav_nav.id'))
     nav = relationship('Nav', backref='items')
     endpoint = Column(String(256), info={
-                            'label': "url_for Endpoint",
-                            'widget': FlexStringWidget(),
-                        })
+        'label': "url_for Endpoint",
+        'widget': FlexStringWidget(),
+    })
     info = {
         'label': "Navigation Menu Item",
     }

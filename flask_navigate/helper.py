@@ -16,12 +16,13 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
+from flask import current_app, url_for, redirect, request, flash, get_flashed_messages
 from flask_bs import render_content_with_bootstrap
 from flask_wtf_flexwidgets import css_template, render_form_template
-from flask import current_app, url_for, redirect, request, flash, get_flashed_messages
-from werkzeug.local import LocalProxy
-from ._compat import iteritems
 from jinja2 import Template
+from werkzeug.local import LocalProxy
+
+from ._compat import iteritems
 
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 _datastore = LocalProxy(lambda: _navigate.datastore)
@@ -120,7 +121,6 @@ def view_function(get_template, **kwargs):
 def add_view_function(template=Template(""), name="", form=None, model=None, edit_endpoint=None, back_endpoint=None,
                       back_endpoint_kwargs={}, additional_model_fields={}, context={}, edit_uses_id=True,
                       edit_endpoint_kwargs={}):
-
     if is_get():
         rendered_form = render_form_template(form)
         return render(template, form=rendered_form, back_endpoint=back_endpoint,
@@ -144,7 +144,6 @@ def add_view_function(template=Template(""), name="", form=None, model=None, edi
 
 def edit_view_function(template=Template(""), name="", form=None, model=None, success_endpoint=None, back_endpoint=None,
                        back_endpoint_kwargs={}, context={}, success_endpoint_kwargs={}):
-
     if is_get():
         populate_form(form, model)
         rendered_form = render_form_template(form)
@@ -165,7 +164,6 @@ def edit_view_function(template=Template(""), name="", form=None, model=None, su
 
 def delete_view_function(template=Template(""), name="", form=None, model=None, back_endpoint=None,
                          success_endpoint=None, success_endpoint_kwargs={}, back_endpoint_kwargs={}, context={}):
-
     if is_get():
         if form is not None:
             rendered_form = render_form_template(form)

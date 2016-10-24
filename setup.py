@@ -17,10 +17,9 @@ from setuptools import setup, find_packages
 
 requirements = ['Flask', 'Flask-BS', 'Flask-Security', 'Flask-SQLAlchemy', 'WTForms-Alchemy']
 
-
 setup(
     name="Flask-Navigate",
-    version="0.2.0",
+    version="0.2.1",
     author="Bill Schumacher",
     author_email="bill@servernet.co",
     description="Another flask extension that provides Navigation menus.",

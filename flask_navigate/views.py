@@ -18,12 +18,14 @@
 """
 from flask import current_app, url_for
 from werkzeug.local import LocalProxy
-from .models import NavForm, NavItemForm
+
 from .helper import view_context, render, add_view_function, model_exists, \
     edit_view_function, delete_view_function
+from .models import NavForm, NavItemForm
 from .templates import nav_admin_add_nav_item_template, nav_admin_add_nav_template, nav_admin_delete_template, \
     nav_admin_edit_nav_template, nav_admin_list_template, nav_item_admin_delete_template, \
     nav_admin_edit_nav_item_template, nav_admin_add_sub_nav_item_template
+
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 
 _ds = LocalProxy(lambda: _navigate.datastore)
