@@ -50,6 +50,7 @@ _default_config = {
     'BLUEPRINT_NAME': 'nav',
     'RENDER_URL': '/',
     'ADMIN_USES_APP_ROUTES': False,
+    'FLASH_MESSAGES': True,
     # FEXADMIN == Flask-EXtensionAdmin (Coming Soon)
     'ADMIN_USES_FEXADMIN': False,
     'ADMIN_LIST_NAV_URL': '/admin',
@@ -116,6 +117,7 @@ class _NavigateState(object):
         self.url_prefix = ""
         self.subdomain = ""
         self.render_url = ""
+        self.flash_messages = True
         self.admin_uses_app_routes = False
         self.admin_list_nav_url = '/admin/'
         self.admin_add_nav_url = '/admin/nav/add'
@@ -243,6 +245,8 @@ class Datastore(object):
     def drop_all(self):
         raise NotImplementedError
 
+    def get(self, model, identifier):
+        raise NotImplementedError
 
 class SQLAlchemyDatastore(Datastore):
     def commit(self):
@@ -261,6 +265,16 @@ class SQLAlchemyDatastore(Datastore):
 
     def drop_all(self):
         self.db.drop_all()
+
+    def get(self, model, identifier, id_column="id"):
+        if type(identifier) == str:
+            if identifier.isdigit():
+                return self.db.query(model).get(int(identifier))
+            else:
+                return self.db.query(model).filter(model.__getattribute__(id_column) == identifier).first()
+        elif type(identifier) == int:
+            return self.db.query(model).get(identifier)
+        return None
 
 
 class NavDatastore(object):
@@ -355,30 +369,30 @@ def create_blueprint(state, import_name):
                         methods=['GET', 'POST'],
                         endpoint=state.admin_add_nav_endpoint)(state.admin_add_nav_view)
 
-    admin_routing.route(state.admin_edit_nav_url + slash_url_suffix(state.admin_edit_nav_url, '<nav_id>'),
+    admin_routing.route(state.admin_edit_nav_url + slash_url_suffix(state.admin_edit_nav_url, '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_edit_nav_endpoint)(state.admin_edit_nav_view)
 
-    admin_routing.route(state.admin_delete_nav_url + slash_url_suffix(state.admin_delete_nav_url, '<nav_id>'),
+    admin_routing.route(state.admin_delete_nav_url + slash_url_suffix(state.admin_delete_nav_url, '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_delete_nav_endpoint)(state.admin_delete_nav_view)
 
-    admin_routing.route(state.admin_add_nav_item_url + slash_url_suffix(state.admin_add_nav_item_url, '<nav_id>'),
+    admin_routing.route(state.admin_add_nav_item_url + slash_url_suffix(state.admin_add_nav_item_url, '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_add_nav_item_endpoint)(state.admin_add_nav_item_view)
 
     admin_routing.route(state.admin_add_sub_nav_item_url + slash_url_suffix(state.admin_add_sub_nav_item_url,
-                                                                            '<nav_item_id>'),
+                                                                            '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_add_sub_nav_item_endpoint)(state.admin_add_sub_nav_item_view)
 
     admin_routing.route(state.admin_edit_nav_item_url + slash_url_suffix(state.admin_edit_nav_item_url,
-                                                                         '<nav_item_id>'),
+                                                                         '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_edit_nav_item_endpoint)(state.admin_edit_nav_item_view)
 
     admin_routing.route(state.admin_delete_nav_item_url + slash_url_suffix(state.admin_delete_nav_item_url,
-                                                                           '<nav_item_id>'),
+                                                                           '<id>'),
                         methods=['GET', 'POST'],
                         endpoint=state.admin_delete_nav_item_endpoint)(state.admin_delete_nav_item_view)
     return bp

@@ -129,6 +129,9 @@ class Nav(Base):
                             'label': "Repeat Image",
                             'widget': FlexBoolWidget(),
                         })
+    info = {
+        'label': "Navigation Menu",
+    }
 
     def top_level_items(self):
         return _datastore.db.query(NavItem).filter(NavItem.nav_id == self.id).filter(NavItem.parent_id == None).all()
@@ -220,6 +223,9 @@ class NavItem(Base):
                             'label': "url_for Endpoint",
                             'widget': FlexStringWidget(),
                         })
+    info = {
+        'label': "Navigation Menu Item",
+    }
 
     def children(self):
         return _datastore.db.query(NavItem).filter(NavItem.parent_id == self.id).all()

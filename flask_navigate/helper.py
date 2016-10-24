@@ -16,9 +16,12 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
-from flask import current_app, url_for, redirect
+from flask_bs import render_content_with_bootstrap
+from flask_wtf_flexwidgets import css_template, render_form_template
+from flask import current_app, url_for, redirect, request, flash
 from werkzeug.local import LocalProxy
 from ._compat import iteritems
+from jinja2 import Template
 
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 _datastore = LocalProxy(lambda: _navigate.datastore)
@@ -61,3 +64,131 @@ def update_object(form, obj):
             dirty = True
     if dirty:
         _datastore.commit()
+
+
+def render(template, **kwargs):
+    return render_content_with_bootstrap(body=template.render(**kwargs), head="<style>" + css_template + "</style>")
+
+
+def validate_on_submit(form):
+    form.process(formdata=request.form)
+    if form.validate():
+        return True
+    return False
+
+
+def is_get():
+    if request.method == 'GET':
+        return True
+    return False
+
+
+def model_exists(model, model_id=None, filters=list(), not_found_url=None):
+    if len(filters):
+        query = _datastore.db.query(model)
+        for f in filters:
+            if f.operator == "==":
+                query.filter(f.column == f.value)
+            elif f.operator == "!=":
+                query.filter(f.column != f.value)
+            else:
+                raise NotImplementedError
+        if model_id is not None:
+            query.filter(model.id == model_id)
+        obj = query.first()
+    else:
+        obj = _datastore.get(model, model_id)
+    if not obj:
+        flash("{} was not found...".format(model.info['label']), "error")
+        if not_found_url is not None:
+            if type(not_found_url) == str:
+                return redirect(not_found_url)
+    return obj
+
+
+class Filter(object):
+    def __init__(self, column, value, operator):
+        self.column = column
+        self.value = value
+        self.operator = operator
+
+
+def view_function(get_template, **kwargs):
+    return render(get_template, **kwargs)
+
+
+def add_view_function(template=Template(""), name="", form=None, model=None, edit_endpoint=None, back_endpoint=None,
+                      back_endpoint_kwargs={}, additional_model_fields={}, context={}, edit_uses_id=True,
+                      edit_endpoint_kwargs={}):
+
+    if is_get():
+        rendered_form = render_form_template(form)
+        return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                      back_endpoint_kwargs=back_endpoint_kwargs, **context)
+    else:
+        if validate_on_submit(form):
+            new_db_obj = model(**additional_model_fields, **form.data_without_submit)
+            _datastore.add(new_db_obj)
+            if _navigate.flash_messages:
+                flash("{name} added successfully!".format(name=name), 'success')
+            if edit_uses_id:
+                return redirect(url_for(edit_endpoint, id=new_db_obj.id, **edit_endpoint_kwargs))
+            else:
+                return redirect(url_for(edit_endpoint, **edit_endpoint_kwargs))
+        if _navigate.flash_messages:
+            flash("{name} form has errors.".format(name=name), 'error')
+        rendered_form = render_form_template(form)
+        return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                      back_endpoint_kwargs=back_endpoint_kwargs, **context)
+
+
+def edit_view_function(template=Template(""), name="", form=None, model=None, success_endpoint=None, back_endpoint=None,
+                       back_endpoint_kwargs={}, context={}, success_endpoint_kwargs={}):
+
+    if is_get():
+        populate_form(form, model)
+        rendered_form = render_form_template(form)
+        return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                      back_endpoint_kwargs=back_endpoint_kwargs, **context)
+    else:
+        if validate_on_submit(form):
+            update_object(form, model)
+            if _navigate.flash_messages:
+                flash("{name} updated successfully!".format(name=name), 'success')
+            return redirect(url_for(success_endpoint, **success_endpoint_kwargs))
+        if _navigate.flash_messages:
+            flash("{name} form has errors.".format(name=name), 'error')
+        rendered_form = render_form_template(form)
+        return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                      back_endpoint_kwargs=back_endpoint_kwargs, **context)
+
+
+def delete_view_function(template=Template(""), name="", form=None, model=None, back_endpoint=None,
+                         success_endpoint=None, success_endpoint_kwargs={}, back_endpoint_kwargs={}, context={}):
+
+    if is_get():
+        if form is not None:
+            rendered_form = render_form_template(form)
+            return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                          back_endpoint_kwargs=back_endpoint_kwargs, **context)
+        else:
+            return render(template, back_endpoint=back_endpoint,
+                          back_endpoint_kwargs=back_endpoint_kwargs, **context)
+    else:
+        if form is not None:
+            if validate_on_submit(form):
+                if _navigate.flash_messages:
+                    flash("{name} deleted successfully!".format(name=name), 'success')
+                _datastore.delete(model)
+                return redirect(url_for(success_endpoint, **success_endpoint_kwargs))
+            else:
+                if _navigate.flash_messages:
+                    flash("{name} form has errors.".format(name=name), 'error')
+
+            rendered_form = render_form_template(form)
+            return render(template, form=rendered_form, back_endpoint=back_endpoint,
+                          back_endpoint_kwargs=back_endpoint_kwargs, **context)
+        if _navigate.flash_messages:
+            flash("{name} deleted successfully!".format(name=name), 'success')
+        _datastore.delete(model)
+        return redirect(url_for(success_endpoint, **success_endpoint_kwargs))

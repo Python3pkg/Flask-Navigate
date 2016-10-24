@@ -16,159 +16,87 @@
     Some code copied from:
     https://github.com/maxcountryman/flask-login and https://github.com/mattupstate/flask-security  See LICENSE
 """
-from flask_bs import render_content_with_bootstrap
-from flask import current_app, redirect, request, url_for, flash
+from flask import current_app, url_for
 from werkzeug.local import LocalProxy
-from flask_wtf_flexwidgets import render_form_template, css_template
 from .models import NavForm, NavItemForm
-from .helper import view_context, populate_form, update_object
+from .helper import view_context, render, add_view_function, model_exists, \
+    edit_view_function, delete_view_function
 from .templates import nav_admin_add_nav_item_template, nav_admin_add_nav_template, nav_admin_delete_template, \
     nav_admin_edit_nav_template, nav_admin_list_template, nav_item_admin_delete_template, \
     nav_admin_edit_nav_item_template, nav_admin_add_sub_nav_item_template
 _navigate = LocalProxy(lambda: current_app.extensions['navigate'])
 
-_datastore = LocalProxy(lambda: _navigate.datastore)
-
-
-def render(template, **kwargs):
-    return render_content_with_bootstrap(body=template.render(**kwargs), head="<style>" + css_template + "</style>")
+_ds = LocalProxy(lambda: _navigate.datastore)
 
 
 def admin_list_nav():
-    navigation_menus = _datastore.get_all_nav()
+    navigation_menus = _ds.get_all_nav()
     context = view_context()
     return render(nav_admin_list_template, navs=navigation_menus, **context)
 
 
 def admin_add_nav():
-    form = NavForm()
     context = view_context()
-    if request.method == 'GET':
-        rendered_form = render_form_template(form)
-        return render(nav_admin_add_nav_template, form=rendered_form, **context)
-    else:
-        form.process(formdata=request.form)
-        if form.validate():
-            nav = _datastore.create_nav(**form.data_without_submit)
-            return redirect(url_for(context['edit_nav_endpoint'], nav_id=nav.id))
-        rendered_form = render_form_template(form)
-        return render(nav_admin_add_nav_template, form=rendered_form, **context)
+    return add_view_function(
+        nav_admin_add_nav_template, _ds.nav_model.info['label'], NavForm(), _ds.nav_model,
+        back_endpoint=context['list_nav_endpoint'], edit_endpoint=context['edit_nav_endpoint'], context=context)
 
 
-def admin_edit_nav(nav_id=None):
-    nav_obj = _datastore.get_nav(nav_id)
+def admin_edit_nav(id=None):
     context = view_context()
-    if nav_obj:
-        form = NavForm()
-        populate_form(form, nav_obj)
-        if request.method == 'GET':
-            rendered_form = render_form_template(form)
-            return render(nav_admin_edit_nav_template, form=rendered_form, nav=nav_obj, **context)
-        else:
-            form.process(formdata=request.form)
-            if form.validate():
-                flash("Nav menu updated", "success")
-                update_object(form, nav_obj)
-                return redirect(url_for(context['list_nav_endpoint']))
-            rendered_form = render_form_template(form)
-            return render(nav_admin_edit_nav_template, form=rendered_form, nav=nav_obj, **context)
-    flash("Nav menu not found", "error")
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_obj = model_exists(_ds.nav_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav'] = nav_obj
+    return edit_view_function(nav_admin_edit_nav_template, nav_obj.info['label'], NavForm(), nav_obj,
+                              back_endpoint=context['list_nav_endpoint'], success_endpoint=context['list_nav_endpoint'],
+                              context=context)
 
 
-def admin_delete_nav(nav_id=None):
-    nav_obj = _datastore.get_nav(nav_id)
+def admin_delete_nav(id=None):
     context = view_context()
-    if nav_obj:
-        if request.method == 'GET':
-            return render(nav_admin_delete_template, nav=nav_obj, **context)
-        else:
-            flash('Navigation menu deleted', 'success')
-            _datastore.delete(nav_obj)
-        return redirect(url_for(context['list_nav_endpoint']))
-    flash('Navigation menu not found!', 'error')
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_obj = model_exists(_ds.nav_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav'] = nav_obj
+    return delete_view_function(template=nav_admin_delete_template, name=_ds.nav_model.info['label'], model=nav_obj,
+                                back_endpoint=context['list_nav_endpoint'],
+                                success_endpoint=context['list_nav_endpoint'], context=context)
 
 
-def admin_add_nav_item(nav_id=None):
-    nav_obj = _datastore.get_nav(nav_id)
+def admin_add_nav_item(id=None):
     context = view_context()
-    if nav_obj:
-        form = NavItemForm()
-        if request.method == 'GET':
-            rendered_form = render_form_template(form)
-            return render(nav_admin_add_nav_item_template, form=rendered_form, nav=nav_obj, **context)
-        else:
-            form.process(formdata=request.form)
-            if form.validate():
-                flash("Navigation Menu Item Added", 'success')
-                _datastore.create_nav_item(nav_id=nav_obj.id, **form.data_without_submit)
-                return redirect(url_for(context['edit_nav_endpoint'],
-                                        nav_id=nav_obj.id))
-            else:
-                rendered_form = render_form_template(form)
-                return render(nav_admin_add_nav_item_template, form=rendered_form, nav=nav_obj, **context)
-    flash('Navigation Item Not Found!', 'error')
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_obj = model_exists(_ds.nav_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav'] = nav_obj
+    return add_view_function(nav_admin_add_nav_item_template, _ds.nav_model.info['label'], NavItemForm(),
+                             _ds.nav_item_model, back_endpoint=context['list_nav_endpoint'],
+                             edit_endpoint=context['edit_nav_endpoint'], context=context,
+                             additional_model_fields={'nav_id': nav_obj.id}, edit_endpoint_kwargs={'id': nav_obj.id},
+                             edit_uses_id=False)
 
 
-def admin_add_sub_nav_item(nav_item_id=None):
-    nav_item_obj = _datastore.get_nav_item(nav_item_id)
+def admin_add_sub_nav_item(id=None):
     context = view_context()
-    if nav_item_obj:
-        form = NavItemForm()
-        if request.method == 'GET':
-            rendered_form = render_form_template(form)
-            return render(nav_admin_add_sub_nav_item_template, form=rendered_form, nav=nav_item_obj.nav,
-                          nav_item=nav_item_obj, **context)
-        else:
-            form.process(formdata=request.form)
-            if form.validate():
-                flash("Navigation Menu Item Added", 'success')
-                _datastore.create_nav_item(nav_id=nav_item_obj.nav_id, parent_id=nav_item_obj.id,
-                                           **form.data_without_submit)
-                return redirect(url_for(context['edit_nav_endpoint'],
-                                        nav_id=nav_item_obj.nav_id))
-            else:
-                rendered_form = render_form_template(form)
-                return render(nav_admin_add_sub_nav_item_template, form=rendered_form, nav=nav_item_obj.nav,
-                              nav_item=nav_item_obj, **context)
-    flash('Navigation Item Not Found!', 'error')
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_item_obj = model_exists(_ds.nav_item_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav_item'] = nav_item_obj
+    return add_view_function(nav_admin_add_sub_nav_item_template, nav_item_obj.info['label'], NavItemForm(),
+                             _ds.nav_item_model, back_endpoint=context['list_nav_endpoint'],
+                             edit_endpoint=context['edit_nav_item_endpoint'], context=context,
+                             additional_model_fields={'nav_id': nav_item_obj.nav_id, 'parent_id': nav_item_obj.id})
 
 
-def admin_edit_nav_item(nav_item_id=None):
-    nav_item_obj = _datastore.get_nav_item(nav_item_id)
+def admin_edit_nav_item(id=None):
     context = view_context()
-    if nav_item_obj:
-        form = NavItemForm()
-        populate_form(form, nav_item_obj)
-        if request.method == 'GET':
-            rendered_form = render_form_template(form)
-            return render(nav_admin_edit_nav_item_template, form=rendered_form, nav_item=nav_item_obj, **context)
-        else:
-            form.process(formdata=request.form)
-            if form.validate():
-                flash("Nav menu item updated", "success")
-                update_object(form, nav_item_obj)
-                return redirect(url_for(context['list_nav_endpoint']))
-            rendered_form = render_form_template(form)
-            return render(nav_admin_edit_nav_template, form=rendered_form, nav_item=nav_item_obj, **context)
-
-    flash('Navigation Item Not Found!', 'error')
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_item_obj = model_exists(_ds.nav_item_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav_item'] = nav_item_obj
+    return edit_view_function(nav_admin_edit_nav_item_template, nav_item_obj.info['label'], NavItemForm(), nav_item_obj,
+                              back_endpoint=context['list_nav_endpoint'], success_endpoint=context['edit_nav_endpoint'],
+                              success_endpoint_kwargs={'id': nav_item_obj.nav_id},
+                              context=context)
 
 
-def admin_delete_nav_item(nav_item_id=None):
-    nav_item_obj = _datastore.get_nav_item(nav_item_id)
+def admin_delete_nav_item(id=None):
     context = view_context()
-    if nav_item_obj:
-        if request.method == 'GET':
-            return render(nav_item_admin_delete_template, nav_item=nav_item_obj, **context)
-        else:
-            flash('Navigation Menu Item Deleted', 'success')
-            nav_id = nav_item_obj.nav_id
-            _datastore.delete(nav_item_obj)
-            return redirect(url_for(context['edit_nav_endpoint'], nav_id=nav_id))
-    flash('Navigation Menu Item Not Found!', 'error')
-    return redirect(url_for(context['list_nav_endpoint']))
+    nav_item_obj = model_exists(_ds.nav_item_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
+    context['nav_item'] = nav_item_obj
+    return delete_view_function(template=nav_item_admin_delete_template, name=_ds.nav_item_model.info['label'],
+                                model=nav_item_obj, back_endpoint=context['edit_nav_endpoint'],
+                                back_endpoint_kwargs={'id': nav_item_obj.nav_id},
+                                success_endpoint=context['edit_nav_endpoint'],
+                                success_endpoint_kwargs={'id': nav_item_obj.nav_id}, context=context)
