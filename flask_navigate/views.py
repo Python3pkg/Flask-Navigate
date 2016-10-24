@@ -64,7 +64,7 @@ def admin_add_nav_item(id=None):
     context = view_context()
     nav_obj = model_exists(_ds.nav_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
     context['nav'] = nav_obj
-    return add_view_function(nav_admin_add_nav_item_template, _ds.nav_model.info['label'], NavItemForm(),
+    return add_view_function(nav_admin_add_nav_item_template, _ds.nav_item_model.info['label'], NavItemForm(),
                              _ds.nav_item_model, back_endpoint=context['list_nav_endpoint'],
                              edit_endpoint=context['edit_nav_endpoint'], context=context,
                              additional_model_fields={'nav_id': nav_obj.id}, edit_endpoint_kwargs={'id': nav_obj.id},
@@ -75,7 +75,7 @@ def admin_add_sub_nav_item(id=None):
     context = view_context()
     nav_item_obj = model_exists(_ds.nav_item_model, model_id=id, not_found_url=url_for(context['list_nav_endpoint']))
     context['nav_item'] = nav_item_obj
-    return add_view_function(nav_admin_add_sub_nav_item_template, nav_item_obj.info['label'], NavItemForm(),
+    return add_view_function(nav_admin_add_sub_nav_item_template, _ds.nav_item_model.info['label'], NavItemForm(),
                              _ds.nav_item_model, back_endpoint=context['list_nav_endpoint'],
                              edit_endpoint=context['edit_nav_item_endpoint'], context=context,
                              additional_model_fields={'nav_id': nav_item_obj.nav_id, 'parent_id': nav_item_obj.id})

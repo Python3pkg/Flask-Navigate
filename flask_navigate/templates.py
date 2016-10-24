@@ -14,8 +14,16 @@
 """
 from jinja2 import Template
 
+flashed_messages_template = """
+<div>
+{% for category, message in get_flashed_messages(True) %}
+    <div class="{{ category }}">
+        {{ message }}
+    </div>
+{% endfor %}
+</div>"""
 
-nav_admin_list_template = Template("""
+nav_admin_list_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Navigation Menus</h4>
@@ -33,7 +41,7 @@ nav_admin_list_template = Template("""
 """)
 
 
-nav_admin_add_nav_template = Template("""
+nav_admin_add_nav_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Add Navigation Menu</h4>
@@ -43,7 +51,7 @@ nav_admin_add_nav_template = Template("""
 </div>
 """)
 
-nav_admin_edit_nav_template = Template("""
+nav_admin_edit_nav_template = Template(flashed_messages_template + """
 {% macro render_admin_nav_item(nav_item) %}
     <div>
         <a href="{{ url_for(edit_nav_item_endpoint, id=nav_item.id) }}">{{ nav_item.text }}</a> -
@@ -74,7 +82,7 @@ nav_admin_edit_nav_template = Template("""
 </div>
 """)
 
-nav_admin_delete_template = Template("""
+nav_admin_delete_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Delete Navigation Menu</h4>
@@ -100,7 +108,7 @@ nav_admin_delete_template = Template("""
 </div>
 """)
 
-nav_item_admin_delete_template = Template("""
+nav_item_admin_delete_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Delete Navigation Menu Item</h4>
@@ -126,7 +134,7 @@ nav_item_admin_delete_template = Template("""
 </div>
 """)
 
-nav_admin_add_nav_item_template = Template("""
+nav_admin_add_nav_item_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Add Navigation Menu Item</h4>
@@ -136,7 +144,7 @@ nav_admin_add_nav_item_template = Template("""
 </div>
 """)
 
-nav_admin_add_sub_nav_item_template = Template("""
+nav_admin_add_sub_nav_item_template = Template(flashed_messages_template + """
 <div>
     <div>
         <h4>Add Navigation Menu Item</h4>
@@ -146,7 +154,7 @@ nav_admin_add_sub_nav_item_template = Template("""
 </div>
 """)
 
-nav_admin_edit_nav_item_template = Template("""
+nav_admin_edit_nav_item_template = Template(flashed_messages_template + """
 {% macro render_admin_nav_item(nav_item) %}
     <div>
         <a href="{{ url_for(edit_nav_item_endpoint, id=nav_item.id) }}">{{ nav_item.text }}</a> -

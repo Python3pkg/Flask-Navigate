@@ -18,7 +18,7 @@
 """
 from flask_bs import render_content_with_bootstrap
 from flask_wtf_flexwidgets import css_template, render_form_template
-from flask import current_app, url_for, redirect, request, flash
+from flask import current_app, url_for, redirect, request, flash, get_flashed_messages
 from werkzeug.local import LocalProxy
 from ._compat import iteritems
 from jinja2 import Template
@@ -46,7 +46,7 @@ def view_context():
         'edit_nav_item_endpoint': endpoint(_navigate.admin_edit_nav_item_endpoint),
         'delete_nav_item_endpoint': endpoint(_navigate.admin_delete_nav_item_endpoint),
         'url_for': url_for,
-
+        'get_flashed_messages': get_flashed_messages
     }
 
 
