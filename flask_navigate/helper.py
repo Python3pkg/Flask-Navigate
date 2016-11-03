@@ -127,7 +127,10 @@ def add_view_function(template=Template(""), name="", form=None, model=None, edi
                       back_endpoint_kwargs=back_endpoint_kwargs, **context)
     else:
         if validate_on_submit(form):
-            new_db_obj = model(**additional_model_fields, **form.data_without_submit)
+            model_fields = dict(**additional_model_fields)
+            model_fields.update(form.data_without_submit)
+
+            new_db_obj = model(**model_fields)
             _datastore.add(new_db_obj)
             if _navigate.flash_messages:
                 flash("{name} added successfully!".format(name=name), 'success')
