@@ -145,7 +145,7 @@ class OrderedModelForm(ModelForm):
             for name in field_order:
                 if name == '*':
                     for key, f in iteritems(self._fields):
-                        print(f.type)
+                        print((f.type))
                         if key not in field_order:
                             temp_fields[key] = f
                 else:

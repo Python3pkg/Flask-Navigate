@@ -89,7 +89,7 @@ def get_config(app):
     application without the annoying 'NAV_' prefix.
     :param app: The application to inspect
     """
-    items = app.config.items()
+    items = list(app.config.items())
     prefix = 'NAV_'
 
     def strip_prefix(tup):
@@ -99,7 +99,7 @@ def get_config(app):
 
 
 def _get_state(app, datastore, **kwargs):
-    for key, value in get_config(app).items():
+    for key, value in list(get_config(app).items()):
         kwargs[key.lower()] = value
 
     kwargs.update(dict(
@@ -145,7 +145,7 @@ class _NavigateState(object):
         self.admin_add_sub_nav_item_view = admin_add_sub_nav_item
         self.admin_edit_nav_item_view = admin_edit_nav_item
         self.admin_delete_nav_item_view = admin_delete_nav_item
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             setattr(self, key.lower(), value)
 
 
@@ -179,7 +179,7 @@ class Navigate(object):
         if not nav_model_created or not nav_item_model_created:
             Base.metadata.create_all()
 
-        for key, value in _default_config.items():
+        for key, value in list(_default_config.items()):
             app.config.setdefault('NAV_' + key, value)
 
         if hasattr(app, 'teardown_appcontext'):
@@ -310,7 +310,7 @@ class NavDatastore(object):
     def create_nav_item(self, **kwargs):
         kwargs = self._create_nav_item_defaults(**kwargs)
         for key, value in iteritems(kwargs):
-            print("{}{}".format(key, value))
+            print(("{}{}".format(key, value)))
         nav_item = self.nav_item_model(**kwargs)
         return self.__getattribute__('add')(nav_item)
 

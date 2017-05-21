@@ -52,15 +52,15 @@ def view_context():
 
 
 def populate_form(form, obj):
-    for key in form.data_without_submit.keys():
-        if key in obj.__table__.columns.keys():
+    for key in list(form.data_without_submit.keys()):
+        if key in list(obj.__table__.columns.keys()):
             form.__getattribute__(key).data = obj.__getattribute__(key)
 
 
 def update_object(form, obj):
     dirty = False
     for key, value in iteritems(form.data_without_submit):
-        if key in obj.__table__.columns.keys():
+        if key in list(obj.__table__.columns.keys()):
             obj.__setattr__(key, value)
             dirty = True
     if dirty:
